@@ -1,0 +1,70 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">{{ exam.title }}</h2>
+    {% if exam.is_retake %}<p><span class="badge warn">{{ exam.get_purpose_display }}</span> for <a href="{% if exam.replaces_exam %}{% url 'exam_detail' course.pk exam.replaces_exam_id %}{% else %}{% url 'assignment_detail' course.pk exam.replaces_assignment_id %}{% endif %}">{{ exam.original.title }}</a>
+      · {{ exam.get_policy_display|lower }} · {{ exam.candidates.count }} student{{ exam.candidates.count|pluralize }}{% if exam.term %} · {{ exam.term }}{% endif %}</p>
+    {% elif exam.retakes.exists %}<p class="sub">Retakes: {% for r in exam.retakes.all %}<a href="{% url 'exam_detail' course.pk r.pk %}">{{ r.title }}</a> ({{ r.candidates.count }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+    <p class="sub">{{ exam.component|default:"No component" }} · {{ exam.date|date:"D j M Y"|default:"date TBD" }} · {{ exam.duration_minutes }} min ·
+      paper total <strong>{{ exam.paper_total|num }}</strong> / {{ exam.total_marks|num }}</p></div>
+  <div class="row">
+    <form method="post" class="inline">{% csrf_token %}<button name="action" value="regenerate" class="btn" data-confirm="Replace the current paper with a freshly generated one?">↻ Regenerate</button></form>
+    <a class="btn" href="{% url 'exam_print' course.pk exam.pk %}">Print paper</a>
+    <a class="btn" href="{% url 'exam_print' course.pk exam.pk %}?answers=1">Print with marking scheme</a>
+    <a class="btn primary" href="{% url 'exam_marks' course.pk exam.pk %}">Enter marks</a>
+    {% if not exam.is_retake %}<a class="btn" href="{% url 'retake_new' course.pk %}?exam={{ exam.pk }}&purpose=reexam">Re-exam</a>
+    <a class="btn" href="{% url 'retake_new' course.pk %}?exam={{ exam.pk }}&purpose=additional">Additional assessment</a>{% endif %}
+  </div>
+</div>
+<div class="grid cols-2">
+  <div class="stack">
+    <form method="post" class="card">{% csrf_token %}<input type="hidden" name="action" value="labels">
+      <h3>Question paper</h3>
+      <table class="compact">
+        <tr><th>No.</th><th>Question</th><th>CO / Bloom</th><th>Marks</th><th></th></tr>
+        {% for eq in paper %}
+          {% ifchanged eq.section %}<tr><td colspan="5"><strong>{{ eq.section }}</strong></td></tr>{% endifchanged %}
+          <tr><td style="width:4.5rem"><input class="cell" type="text" name="label-{{ eq.pk }}" value="{{ eq.label }}" style="text-align:left"></td>
+            <td>{{ eq.question.text }}<div class="sub">Unit {{ eq.question.unit.number }}</div></td>
+            <td style="white-space:nowrap">{% if eq.question.outcome %}<span class="badge info">{{ eq.question.outcome.code }}</span>{% endif %}<br><span class="sub">{{ eq.question.bloom_level|bloom }}</span></td>
+            <td><input class="cell" type="number" step="0.5" name="marks-{{ eq.pk }}" value="{{ eq.marks|num:2 }}"></td>
+            <td><button form="rm-{{ eq.pk }}" class="btn small ghost" title="Remove">✕</button></td></tr>
+        {% empty %}<tr><td colspan="5" class="sub">Empty paper — generate the question bank first, then regenerate.</td></tr>{% endfor %}
+      </table>
+      <button class="btn small" style="margin-top:.5rem">Save labels &amp; marks</button>
+    </form>
+    {% for eq in paper %}<form method="post" id="rm-{{ eq.pk }}">{% csrf_token %}<input type="hidden" name="action" value="remove"><input type="hidden" name="eq" value="{{ eq.pk }}"></form>{% endfor %}
+    <form method="post" class="card">{% csrf_token %}<input type="hidden" name="action" value="add">
+      <h3>Add from question bank</h3>
+      <select name="question">{% for q in bank %}<option value="{{ q.pk }}">[U{{ q.unit.number }} · {{ q.marks|num }}m · {{ q.outcome.code }} · L{{ q.bloom_level }}] {{ q.text|truncatechars:90 }}</option>{% endfor %}</select>
+      <button class="btn small" style="margin-top:.4rem">Add question</button>
+      <a class="btn small ghost" href="{% url 'question_bank' course.pk %}">Manage bank</a>
+    </form>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h3>Coverage</h3>
+      <div class="grid cols-2">
+        <div><strong>Bloom's levels</strong>{% for k, v in bloom.items %}<div class="row between"><span>{{ k }}</span><span>{{ v|num }} marks</span></div>{% endfor %}</div>
+        <div><strong>Course outcomes</strong>{% for k, v in cos.items %}<div class="row between"><span>{{ k }}</span><span>{{ v|num }} marks</span></div>{% endfor %}</div>
+      </div>
+    </div>
+    {% if summary %}
+    <div class="card"><h3>Results</h3>
+      <div class="grid cols-4"><div><div class="stat">{{ summary.average|num }}</div><div class="stat-label">average</div></div><div><div class="stat">{{ summary.highest|num }}</div><div class="stat-label">highest</div></div>
+        <div><div class="stat">{{ summary.lowest|num }}</div><div class="stat-label">lowest</div></div><div><div class="stat">{{ summary.pass_rate|pct }}</div><div class="stat-label">pass rate</div></div></div>
+      <h4>Question analysis</h4>
+      <table class="compact">{% for a in analysis %}<tr><td>{{ a.eq.label }}</td><td>{{ a.eq.question.outcome.code }}</td><td style="width:50%"><div class="progress {% if a.percent >= 60 %}ok{% endif %}"><span style="width:{{ a.percent|default:0 }}%"></span></div></td><td class="num">{{ a.percent|pct }}</td></tr>{% endfor %}</table>
+      <p class="sub">Questions with very low averages may be too hard or ambiguous — consider revisiting that topic.</p>
+    </div>{% endif %}
+    <form method="post" class="card">{% csrf_token %}<input type="hidden" name="action" value="meta">
+      <h3>Details</h3>
+      <div class="field"><label>Title</label><input type="text" name="title" value="{{ exam.title }}"></div>
+      <div class="field"><label>Instructions</label><textarea name="instructions" rows="4">{{ exam.instructions }}</textarea></div>
+      <div class="field"><label>Status</label><select name="status">{% for k, v in exam.STATUS_CHOICES %}<option value="{{ k }}" {% if exam.status == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+        <span class="help">Scheduled = visible to students; Marks released = students see their question-wise marks.</span></div>
+      <div class="row"><button class="btn">Save</button><button name="action" value="delete" class="btn danger" data-confirm="Delete this exam and its marks?">Delete exam</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}

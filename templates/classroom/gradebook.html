@@ -1,0 +1,24 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Gradebook</h2>
+    <p class="sub"><sup class="badge warn">RE</sup> / <sup class="badge warn">ADD</sup> = score taken from a re-exam or additional assessment. Item scores roll up into each component (per its aggregation rule), then into a weighted final % and grade (10-point scale). Weights total {{ book.total_weight|num }}%.
+      A student below a component's minimum pass % gets F.</p></div>
+  <div class="row"><a class="btn" href="{% url 'cie_report' course.pk %}">CIE &amp; attendance report</a><a class="btn" href="{% url 'exam_scheme' course.pk %}">Assessment scheme</a><a class="btn primary" href="?format=csv">Export CSV</a></div>
+</div>
+<div class="table-wrap"><table class="matrix">
+  <tr><th rowspan="2">Student</th>
+    {% for col in book.columns %}<th colspan="{{ col.items|length|add:1 }}">{{ col.component.name }} <span class="sub">({{ col.component.weight|num }}%)</span></th>{% endfor %}
+    <th rowspan="2">Final %</th><th rowspan="2">Grade</th></tr>
+  <tr>{% for col in book.columns %}{% for item in col.items %}<th title="{{ item.obj }}">{% if item.kind == 'exam' %}<a href="{% url 'exam_marks' course.pk item.obj.pk %}">{{ item.obj.title|truncatechars:14 }}</a>{% else %}<a href="{% url 'assignment_detail' course.pk item.obj.pk %}">{{ item.obj.title|truncatechars:14 }}</a>{% endif %}<br>/{{ item.max|num }}</th>{% endfor %}<th>/{{ col.component.max_marks|num }}</th>{% endfor %}</tr>
+  {% for row in book.rows %}<tr>
+    <td style="white-space:nowrap"><a href="{% url 'my_grades' course.pk %}?student={{ row.student.pk }}">{{ row.student }}</a></td>
+    {% for comp in row.components %}
+      {% for c in comp.cells %}<td>{% if c %}{% if c.score is None %}AB{% else %}{{ c.score|num }}{% endif %}{% if c.retake %}<sup class="badge warn" title="From {{ c.retake }} (original: {{ c.original|default_if_none:'AB' }})">{{ c.retake }}</sup>{% endif %}{% else %}<span class="sub">·</span>{% endif %}</td>{% endfor %}
+      <td><strong>{{ comp.marks|num }}</strong></td>
+    {% endfor %}
+    <td><strong>{{ row.final_percent|pct:1 }}</strong></td>
+    <td>{% if row.grade == 'F' %}<span class="badge bad" title="{{ row.failed_components|join:', ' }}">F</span>{% elif row.grade != '-' %}<span class="badge ok">{{ row.grade }}</span>{% else %}–{% endif %}</td>
+  </tr>{% empty %}<tr><td colspan="3" class="empty">No students enrolled.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

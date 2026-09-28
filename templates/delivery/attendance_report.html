@@ -1,0 +1,15 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Attendance</h2><p class="sub">{{ sessions|length }} delivered sessions. P = present, A = absent, L = late, E = excused/OD (late and OD count as present).</p></div>
+  {% if request.is_course_teacher %}<a class="btn" href="?format=csv">Export CSV</a>{% endif %}
+</div>
+<div class="table-wrap"><table class="matrix">
+  <tr><th>Student</th><th>%</th>{% for s in sessions %}<th title="{{ s.plan_item.title }}"><a href="{% url 'session_detail' course.pk s.pk %}">{{ s.date|date:"j/n" }}</a></th>{% endfor %}</tr>
+  {% for r in rows %}<tr>
+    <td style="white-space:nowrap">{{ r.student }}</td>
+    <td><span class="badge {{ r.stats.percent|att_class }}">{{ r.stats.percent|pct }}</span></td>
+    {% for c in r.cells %}<td>{% if c == 'A' %}<span style="color:var(--bad);font-weight:700">A</span>{% elif c %}{{ c }}{% else %}<span class="sub">·</span>{% endif %}</td>{% endfor %}
+  </tr>{% empty %}<tr><td colspan="3" class="empty">No students.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

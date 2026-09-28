@@ -1,0 +1,43 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<form method="post">{% csrf_token %}
+<div class="page-head">
+  <div><h2 style="margin:0">Edit rubric</h2>
+    {% if graded %}<p class="badge warn">This rubric already has graded work — changing points will not re-score existing submissions until they are re-graded.</p>{% endif %}</div>
+  <div class="row"><button name="duplicate" value="1" class="btn">Duplicate</button><button name="delete" value="1" class="btn danger" data-confirm="Delete this rubric?">Delete</button>
+    <a class="btn ghost" href="{% url 'rubric_list' course.pk %}">Back</a></div>
+</div>
+<div class="card">
+  <div class="form-grid">{% field meta.title %}{% field meta.kind %}{% field meta.is_template %}</div>
+  {% field meta.description %}
+</div>
+<div class="table-wrap rubric-grid" style="margin-top:1rem">
+<table>
+  <tr><th>Criterion</th><th>Levels (label · points · descriptor)</th></tr>
+  {% for c in criteria %}
+  <tr>
+    <td style="width:26%">
+      <input type="text" name="c{{ c.pk }}-title" value="{{ c.title }}">
+      <textarea name="c{{ c.pk }}-description" rows="2" placeholder="What is assessed">{{ c.description }}</textarea>
+      <div class="row" style="margin-top:.3rem">
+        <label style="margin:0">Max</label><input class="cell" type="number" step="0.5" name="c{{ c.pk }}-max" value="{{ c.max_points|num:2 }}">
+        <label style="margin:0">Order</label><input class="cell" type="number" name="c{{ c.pk }}-order" value="{{ c.order }}">
+      </div>
+      <select name="c{{ c.pk }}-outcome" style="margin-top:.3rem"><option value="">— no CO —</option>{% for o in outcomes %}<option value="{{ o.pk }}" {% if c.outcome_id == o.pk %}selected{% endif %}>{{ o.code }}: {{ o.description|truncatechars:50 }}</option>{% endfor %}</select>
+      <label style="font-weight:400;margin-top:.3rem"><input type="checkbox" name="c{{ c.pk }}-delete" value="1"> remove criterion</label>
+    </td>
+    <td><div class="grid cols-4">
+      {% for l in c.levels.all %}<div>
+        <input type="text" name="l{{ l.pk }}-label" value="{{ l.label }}">
+        <input type="number" step="0.25" name="l{{ l.pk }}-points" value="{{ l.points|num:2 }}" style="margin:.25rem 0">
+        <textarea name="l{{ l.pk }}-descriptor" rows="3">{{ l.descriptor }}</textarea>
+      </div>{% endfor %}
+    </div></td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+<div class="row" style="margin-top:1rem"><button class="btn primary">Save rubric</button><button name="add_criterion" value="1" class="btn">+ Add criterion</button>
+  <span class="sub">Total: {{ rubric.total_points|num }} points</span></div>
+</form>
+{% endblock %}

@@ -1,0 +1,51 @@
+Savitribai Institute of Engineering & Technology
+Department of Computer Engineering
+Course Code: CS201        Course Title: Data Structures and Algorithms
+Semester: III      Credits: 4       L-T-P: 3-0-2
+Prerequisites: Programming in C (CS101)
+
+Course Objectives:
+1. To introduce fundamental data structures and their applications.
+2. To develop algorithmic thinking for efficient problem solving.
+
+Course Outcomes: On successful completion, students will be able to
+CO1: Explain the concepts of abstract data types and analyse algorithm complexity using asymptotic notation.
+CO2: Implement linear data structures such as stacks, queues and linked lists to solve problems.
+CO3: Apply tree data structures including BST, AVL trees and heaps to real world problems.
+CO4: Analyse graph algorithms for traversal, shortest paths and spanning trees.
+CO5: Evaluate searching, sorting and hashing techniques for a given application.
+
+Course Contents
+Unit I: Introduction to Data Structures (6 Hours)
+Abstract data types, Arrays and their representation, Asymptotic notations (Big-O, Omega, Theta), Time and space complexity, Recursion and recurrence relations.
+
+Unit II: Linear Data Structures (8 Hours)
+Stack ADT and applications, Infix to postfix conversion, Queue, Circular queue, Priority queue, Singly linked list, Doubly and circular linked lists, Polynomial representation.
+
+Unit III: Trees (8 Hours)
+Binary trees and traversals, Binary search tree, AVL trees, B-trees, Heaps and heap sort, Huffman coding.
+
+Unit IV: Graphs (7 Hours)
+Graph representation, BFS and DFS, Topological sort, Dijkstra's shortest path algorithm, Minimum spanning trees (Prim's and Kruskal's).
+
+Unit V: Searching, Sorting and Hashing (7 Hours)
+Linear and binary search, Bubble, insertion and selection sort, Merge sort, Quick sort, Hash functions, Collision resolution techniques.
+
+List of Experiments
+1. Implement stack using arrays and linked list.
+2. Convert infix expression to postfix and evaluate it.
+3. Implement circular queue and priority queue.
+4. Implement singly and doubly linked list operations.
+5. Implement binary search tree with traversals.
+6. Implement BFS and DFS on a graph.
+7. Implement Dijkstra's algorithm.
+8. Implement quick sort and merge sort and compare running times.
+9. Implement a hash table with chaining.
+
+Text Books:
+1. Ellis Horowitz, Sartaj Sahni, "Fundamentals of Data Structures in C", Universities Press.
+2. Thomas H. Cormen et al., "Introduction to Algorithms", MIT Press.
+
+Reference Books:
+1. Mark Allen Weiss, "Data Structures and Algorithm Analysis in C", Pearson.
+2. NPTEL: Programming, Data Structures and Algorithms using Python.

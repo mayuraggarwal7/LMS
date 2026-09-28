@@ -1,0 +1,51 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><div class="sub"><a href="{% url 'assignment_detail' course.pk a.pk %}">{{ a.title }}</a></div>
+    <h2 style="margin:.1rem 0">{{ student.display_name }} <span class="sub">{{ student.roll_no }}</span></h2>
+    {% if sub.status == 'turned_in' %}<span class="badge info">Turned in {{ sub.submitted_at|date:"j M H:i" }}{% if sub.is_late %} · late{% endif %}</span>{% elif sub.status == 'returned' %}<span class="badge ok">Returned · {{ sub.score|num }}/{{ a.max_points|num }}</span>{% else %}<span class="badge">Not submitted</span>{% endif %}</div>
+  {% if next_student %}<a class="btn" href="{% url 'grade_submission' course.pk a.pk next_student.pk %}">Next: {{ next_student.display_name }} →</a>{% endif %}
+</div>
+<div class="grid cols-2">
+  <div class="card">
+    <h3>Submission</h3>
+    {% if sub.text %}<div class="notes-body">{{ sub.text|urlize }}</div>{% endif %}
+    {% if sub.file %}<p><a class="btn" href="{{ sub.file.url }}" target="_blank">📎 Open file</a></p>{% endif %}
+    {% if sub.link %}<p><a href="{{ sub.link }}" target="_blank" rel="noopener">{{ sub.link }}</a></p>{% endif %}
+    {% if not sub.text and not sub.file and not sub.link %}<p class="sub">No work attached (you can still grade offline work).</p>{% endif %}
+  </div>
+  <form method="post" class="card">{% csrf_token %}
+    {% if rows %}
+      <div class="row between"><h3 style="margin:0">Rubric</h3><span>Total: <strong id="rubric-total" data-max="{{ a.max_points|num:2 }}">–</strong></span></div>
+      <input type="hidden" name="mode" value="rubric" id="mode">
+      {% for r in rows %}
+      <div data-criterion data-max="{{ r.criterion.max_points|num:2 }}" style="margin:.8rem 0">
+        <div class="row between"><strong>{{ r.criterion.title }}{% if r.criterion.outcome %} <span class="badge info">{{ r.criterion.outcome.code }}</span>{% endif %}</strong>
+          <span class="sub">max {{ r.criterion.max_points|num }}{% if r.score.derived %} · <span title="Distributed from a total score">derived</span>{% endif %}</span></div>
+        <div class="grid cols-4" style="gap:.4rem;margin-top:.3rem">
+          {% for l in r.criterion.levels.all %}
+          <label class="level-option"><input type="radio" name="level-{{ r.criterion.pk }}" value="{{ l.pk }}" data-pts="{{ l.points|num:2 }}" {% if r.score.level_id == l.pk %}checked{% endif %}>
+            <span class="pts">{{ l.points|num }}</span> {{ l.label }}<div class="sub">{{ l.descriptor }}</div></label>
+          {% endfor %}
+        </div>
+        <div class="row" style="margin-top:.3rem"><input class="cell" type="number" step="0.25" min="0" max="{{ r.criterion.max_points }}" name="points-{{ r.criterion.pk }}" data-points placeholder="pts" value="{% if r.score and not r.score.level or r.score.level and r.score.level.points != r.score.points %}{{ r.score.points|num:2 }}{% endif %}">
+          <input type="text" name="comment-{{ r.criterion.pk }}" value="{{ r.score.comment }}" placeholder="Comment for this criterion" style="flex:1"></div>
+      </div>
+      {% endfor %}
+      <details><summary>…or enter only a total (distributed across criteria)</summary>
+        <div class="row" style="margin-top:.4rem"><input class="cell" type="number" step="0.25" name="total" value="{{ sub.score|default_if_none:'' }}"> / {{ a.max_points|num }}
+          <button class="btn small" onclick="document.getElementById('mode').value='total'">Use total</button></div></details>
+    {% else %}
+      <h3>Score</h3>
+      <input type="hidden" name="mode" value="total">
+      <div class="row"><input class="cell" type="number" step="0.25" min="0" max="{{ a.max_points }}" name="total" value="{{ sub.score|default_if_none:'' }}" required> / {{ a.max_points|num }}</div>
+    {% endif %}
+    <div class="field" style="margin-top:.8rem"><label>Overall feedback</label><textarea name="feedback" rows="3">{{ sub.feedback }}</textarea></div>
+    <div class="row">
+      <button name="action" value="return" class="btn primary">Return to student</button>
+      {% if next_student %}<button name="next" value="1" class="btn">Return &amp; next →</button>{% endif %}
+      <button name="action" value="save_draft" class="btn ghost">Save draft</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="card" style="max-width:860px">
+  <h2 style="margin-top:0">{{ exam.title }}</h2>
+  <p class="sub">{{ exam.date|date:"l j F Y"|default:"Date to be announced" }} · {{ exam.duration_minutes }} min · {{ exam.total_marks|num }} marks · Units {% for u in exam.units.all %}{{ u.number }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+  {% if show_marks %}
+    {% if absent %}<p><span class="badge bad">Absent</span></p>{% else %}
+    <p>Your score: <span class="badge ok" style="font-size:1rem">{{ total|num }} / {{ exam.total_marks|num }}</span></p>
+    <table class="compact">{% for r in rows %}<tr><td>{{ r.eq.label }}</td><td>{{ r.eq.question.text }}</td><td>{{ r.eq.question.outcome.code }}</td><td class="num">{{ r.marks|num }}/{{ r.eq.marks|num }}</td></tr>{% endfor %}</table>{% endif %}
+  {% else %}
+    <p>Syllabus for this exam: units {% for u in exam.units.all %}{{ u.number }} ({{ u.title }}){% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+    <p class="sub">Marks will appear here once released.</p>
+  {% endif %}
+</div>
+{% endblock %}

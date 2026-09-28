@@ -1,0 +1,19 @@
+# One-click test deployment on Render (https://render.com): New + > Blueprint > pick this repo.
+# Uses SQLite on the instance disk and seeds demo data, so the database resets on each deploy -
+# fine for testing, not for real use (switch to PostgreSQL for production).
+services:
+  - type: web
+    name: campusflow-lms
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: python manage.py migrate --noinput && python manage.py seed_demo && gunicorn campusflow.wsgi --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: LMS_SERVE_MEDIA
+        value: "1"
+      - key: PYTHON_VERSION
+        value: "3.11.9"

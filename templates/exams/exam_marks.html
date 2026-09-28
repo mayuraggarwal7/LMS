@@ -1,0 +1,25 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Marks entry — {{ exam.title }}</h2>
+    {% if exam.is_retake %}<p><span class="badge warn">{{ exam.get_purpose_display }}</span> — only the {{ rows|length }} registered student{{ rows|length|pluralize }} are listed.</p>{% endif %}
+    <p class="sub">Enter question-wise marks (best for CO attainment), or just a total — it is distributed across questions proportionally. Tick AB for absentees.</p></div>
+  <form method="post" enctype="multipart/form-data" class="row card flat" style="padding:.5rem">{% csrf_token %}
+    <input type="file" name="file" accept=".csv" required style="font-size:.85rem"><button class="btn small">Import CSV</button>
+    <span class="help">roll_no, [name], Q1, Q2, … or roll_no, total</span></form>
+</div>
+<form method="post">{% csrf_token %}
+<div class="table-wrap"><table class="matrix">
+  <tr><th>Student</th><th>AB</th>{% for eq in paper %}<th title="{{ eq.question.text }}">{{ eq.label }}<br><span class="sub">/{{ eq.marks|num }}</span></th>{% endfor %}<th>Total<br><span class="sub">/{{ exam.total_marks|num }}</span></th><th>or total</th></tr>
+  {% for r in rows %}<tr>
+    <td style="white-space:nowrap">{{ r.student }}</td>
+    <td><input type="checkbox" name="ab-{{ r.student.pk }}" {% if r.absent %}checked{% endif %}></td>
+    {% for eq, m in r.cells %}<td><input class="cell" type="number" step="0.5" min="0" max="{{ eq.marks }}" name="m-{{ r.student.pk }}-{{ eq.pk }}" value="{{ m|default_if_none:''|num:2|cut:'–' }}"></td>{% endfor %}
+    <td><strong>{% if r.absent %}AB{% else %}{{ r.total|num }}{% endif %}</strong></td>
+    <td><input class="cell" type="number" step="0.5" name="total-{{ r.student.pk }}" placeholder="total"></td>
+  </tr>{% empty %}<tr><td colspan="4" class="empty">No students enrolled.</td></tr>{% endfor %}
+</table></div>
+<div class="row" style="margin-top:.6rem"><button class="btn primary">Save marks</button><label style="font-weight:400;margin:0"><input type="checkbox" name="release" value="1" {% if exam.status == 'marked' %}checked{% endif %}> release marks to students</label>
+  <a class="btn ghost" href="{% url 'exam_detail' course.pk exam.pk %}">Back to paper</a></div>
+</form>
+{% endblock %}

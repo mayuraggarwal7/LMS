@@ -1,0 +1,22 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="card" style="max-width:980px">
+  <h2>{% if item %}Edit session #{{ item.sequence }}{% else %}Add a session to the plan{% endif %}</h2>
+  <form method="post">{% csrf_token %}
+    {{ form.non_field_errors }}
+    {% field form.title %}
+    <div class="form-grid">{% field form.session_type %}{% field form.unit %}{% field form.bloom_level %}{% field form.duration_minutes %}</div>
+    {% field form.objective %}
+    <div class="grid cols-2"><div class="checks">{% field form.outcomes %}</div><div class="checks" style="max-height:16rem;overflow:auto">{% field form.topics %}</div></div>
+    <div class="form-grid">{% field form.pedagogy %}{% field form.tools %}</div>
+    <div class="form-grid">{% field form.pre_class %}{% field form.in_class %}{% field form.post_class %}</div>
+    {% field form.resources %}
+    <label><input type="checkbox" name="resync" value="1" checked> Re-sync timetable after saving</label>
+    <div class="row" style="margin-top:.6rem">
+      <button class="btn primary">Save</button>
+      <a class="btn ghost" href="{% url 'course_plan' course.pk %}">Cancel</a>
+    </div>
+  </form>
+  {% if item %}<form method="post" action="{% url 'plan_item_delete' course.pk item.pk %}" style="margin-top:1rem">{% csrf_token %}<button class="btn danger small" data-confirm="Delete this plan item?">Delete session from plan</button></form>{% endif %}
+</div>
+{% endblock %}
