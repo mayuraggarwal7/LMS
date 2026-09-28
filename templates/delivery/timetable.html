@@ -1,0 +1,49 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="grid cols-2">
+  <div class="stack">
+    <div class="card accent">
+      <h2>Sync timetable ⇄ learning plan</h2>
+      <p class="sub">Generates every dated class between the semester dates (skipping holidays) and lays the learning plan onto them in order.
+        Delivered sessions, notes and attendance are never touched; cancelling a class shifts the plan forward automatically.</p>
+      <div class="grid cols-3" style="margin:.6rem 0">
+        <div><div class="stat">{{ weekly.lecture }}</div><div class="stat-label">lecture slots/week · {{ plan_counts.lecture }} planned</div></div>
+        <div><div class="stat">{{ weekly.tutorial }}</div><div class="stat-label">tutorial slots/week · {{ plan_counts.tutorial }} planned</div></div>
+        <div><div class="stat">{{ weekly.lab }}</div><div class="stat-label">lab slots/week · {{ plan_counts.lab }} planned</div></div>
+      </div>
+      <form method="post" class="row">{% csrf_token %}<button name="action" value="sync" class="btn primary big">↻ Sync now</button>
+        <a class="btn" href="{% url 'session_list' course.pk %}">View {{ session_count }} sessions</a>
+        <a class="btn ghost" href="{% url 'calendar_ics' course.pk %}">Export .ics</a></form>
+    </div>
+    <div class="card">
+      <h2>Semester dates</h2>
+      <form method="post" class="form-grid">{% csrf_token %}{% field dates_form.start_date %}{% field dates_form.end_date %}
+        <div><button name="action" value="dates" class="btn">Save dates</button></div></form>
+    </div>
+    <div class="card">
+      <h2>Holidays &amp; no-class days</h2>
+      <form method="post" class="form-grid">{% csrf_token %}{% field holiday_form.date %}{% field holiday_form.name %}
+        <div><button name="action" value="holiday" class="btn">Add</button></div></form>
+      {% for h in holidays %}
+        <form method="post" class="row between" style="border-top:1px solid var(--border);padding:.3rem 0">{% csrf_token %}
+          <span>{{ h.date|date:"D j M Y" }} · {{ h.name }}</span><input type="hidden" name="id" value="{{ h.pk }}"><button name="action" value="delete_holiday" class="btn small ghost">✕</button></form>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2>Weekly timetable</h2>
+    <table class="compact">
+      <tr><th>Day</th><th>Time</th><th>Type</th><th>Room</th><th></th></tr>
+      {% for s in slots %}
+      <tr><td>{{ s.get_weekday_display }}</td><td>{{ s.start_time|time:"H:i" }}–{{ s.end_time|time:"H:i" }}</td><td>{{ s.get_session_type_display }}{% if s.batch %} ({{ s.batch }}){% endif %}</td><td>{{ s.room }}</td>
+        <td><form method="post">{% csrf_token %}<input type="hidden" name="id" value="{{ s.pk }}"><button name="action" value="delete_slot" class="btn small ghost">✕</button></form></td></tr>
+      {% empty %}<tr><td colspan="5" class="sub">No slots yet — add your weekly lectures/labs below.</td></tr>{% endfor %}
+    </table>
+    <h3>Add slot</h3>
+    <form method="post">{% csrf_token %}{{ slot_form.non_field_errors }}
+      <div class="form-grid">{% field slot_form.weekday %}{% field slot_form.session_type %}{% field slot_form.start_time %}{% field slot_form.end_time %}{% field slot_form.room %}{% field slot_form.batch %}</div>
+      <button name="action" value="slot" class="btn primary">Add slot</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

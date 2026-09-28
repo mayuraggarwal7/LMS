@@ -1,0 +1,26 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="steps"><span>Upload syllabus</span><span>Review what we found</span><span class="on">Course is ready</span></div>
+<div class="card hero">
+  <h1>🎉 {{ course.code }} is set up</h1>
+  {% if summary %}
+  <div class="grid cols-4" style="margin:1.5rem 0">
+    <div><div class="stat">{{ summary.units }}</div><div class="stat-label">units · {{ summary.topics }} topics</div></div>
+    <div><div class="stat">{{ summary.outcomes }}</div><div class="stat-label">course outcomes</div></div>
+    <div><div class="stat">{{ summary.plan_items }}</div><div class="stat-label">planned sessions</div></div>
+    <div><div class="stat">{{ summary.rubrics }}</div><div class="stat-label">rubric templates</div></div>
+    <div><div class="stat">{{ summary.questions }}</div><div class="stat-label">questions in bank</div></div>
+    <div><div class="stat">{{ summary.assignments }}</div><div class="stat-label">draft assignments</div></div>
+    <div><div class="stat">{{ summary.exams }}</div><div class="stat-label">draft exam papers</div></div>
+  </div>
+  {% for w in summary.warnings %}<p class="badge warn">{{ w }}</p>{% endfor %}
+  {% endif %}
+  <h2>Next steps</h2>
+  <div class="row" style="justify-content:center">
+    <a class="btn" href="{% url 'course_plan' course.pk %}">1. Review the learning plan</a>
+    <a class="btn primary" href="{% url 'timetable' course.pk %}">2. Add your timetable &amp; sync</a>
+    <a class="btn" href="{% url 'course_people' course.pk %}">3. Invite students</a>
+  </div>
+  <p class="sub" style="margin-top:1rem">Students join with class code <span class="code-box">{{ course.join_code }}</span></p>
+</div>
+{% endblock %}

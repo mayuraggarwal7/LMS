@@ -1,0 +1,30 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Classes &amp; notes</h2><p class="sub">{{ progress.delivered }}/{{ progress.total }} planned sessions delivered{% if progress.behind %} · <span class="badge warn">{{ progress.behind }} behind</span>{% endif %}</p></div>
+  <div class="row">
+    <a class="btn small {% if show == 'all' %}primary{% endif %}" href="?show=all">All</a>
+    <a class="btn small {% if show == 'upcoming' %}primary{% endif %}" href="?show=upcoming">Upcoming</a>
+    <a class="btn small {% if show == 'past' %}primary{% endif %}" href="?show=past">Past</a>
+    {% if request.is_course_teacher %}<a class="btn small {% if show == 'pending' %}primary{% endif %}" href="?show=pending">Pending</a>
+    <a class="btn small" href="{% url 'session_add' course.pk %}">+ Extra class</a>{% endif %}
+    <a class="btn small ghost" href="{% url 'calendar_ics' course.pk %}">📅 .ics</a>
+  </div>
+</div>
+<div class="table-wrap"><table>
+  <tr><th>Date</th><th>Type</th><th>Planned</th><th>Status</th>{% if request.is_course_teacher %}<th>Present</th>{% else %}<th>Me</th>{% endif %}<th></th></tr>
+  {% for s in sessions %}
+  <tr class="{% if s.status == 'cancelled' %}muted{% elif s.date == today %}highlight{% endif %}">
+    <td style="white-space:nowrap"><strong>{{ s.date|date:"D j M" }}</strong><br><span class="sub">{{ s.start_time|time:"H:i" }}–{{ s.end_time|time:"H:i" }}</span></td>
+    <td>{{ s.get_session_type_display }}{% if s.is_extra %} <span class="badge">extra</span>{% endif %}</td>
+    <td>{% if s.plan_item %}{% if s.plan_item.unit %}<span class="sub">U{{ s.plan_item.unit.number }}</span> {% endif %}{{ s.plan_item.title|truncatechars:90 }}{% else %}<span class="sub">Buffer / revision</span>{% endif %}
+      {% if s.actual_topics %}<div class="plan-meta">Covered: {{ s.actual_topics|truncatechars:90 }}</div>{% endif %}</td>
+    <td>{% if s.status == 'completed' %}<span class="badge ok">Delivered</span>{% if s.coverage == 'partial' %} <span class="badge warn">partial</span>{% endif %}{% elif s.status == 'cancelled' %}<span class="badge bad">Cancelled</span>{% elif s.date < today %}<span class="badge warn">Pending</span>{% else %}<span class="badge">Scheduled</span>{% endif %}
+      {% if s.notes or s.notes_file or s.resource_link %} <span title="Notes available">🗒</span>{% endif %}</td>
+    {% if request.is_course_teacher %}<td>{% with n=s.attendance.all|length %}{% if n %}{{ n }}{% else %}–{% endif %}{% endwith %}</td>
+    {% else %}<td>{% with st=my_att|get:s.pk %}{% if st == 'A' %}<span class="badge bad">Absent</span>{% elif st %}<span class="badge ok">{{ st }}</span>{% endif %}{% endwith %}</td>{% endif %}
+    <td><a class="btn small {% if request.is_course_teacher and s.status == 'scheduled' and s.date <= today %}primary{% endif %}" href="{% url 'session_detail' course.pk s.pk %}">Open</a></td>
+  </tr>
+  {% empty %}<tr><td colspan="6" class="empty">No sessions.{% if request.is_course_teacher %} <a href="{% url 'timetable' course.pk %}">Add a timetable and sync</a>.{% endif %}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

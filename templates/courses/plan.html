@@ -1,0 +1,40 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2 style="margin:0">Learning plan</h2>
+    <p class="sub">{{ progress.total }} sessions · {{ progress.delivered }} delivered ({{ progress.percent }}%). Each session is mapped to COs, a Bloom level, a pedagogy and digital tools; dates come from the synced timetable.</p>
+  </div>
+  <div class="row no-print">
+    <form method="get" class="row"><select name="unit" onchange="this.form.submit()"><option value="">All units</option>{% for u in units %}<option value="{{ u.number }}" {% if unit_filter == u.number|stringformat:"s" %}selected{% endif %}>Unit {{ u.number }}</option>{% endfor %}</select></form>
+    {% if request.is_course_teacher %}
+      <a class="btn" href="{% url 'plan_item_add' course.pk %}">+ Add session</a>
+      <form method="post" action="{% url 'plan_regenerate' course.pk %}" class="inline">{% csrf_token %}<button class="btn" data-confirm="Rebuild the plan from the syllabus? Your edits to plan items will be replaced (delivered sessions keep their notes).">↻ Regenerate</button></form>
+    {% endif %}
+    <button class="btn" onclick="window.print()">Print</button>
+  </div>
+</div>
+<div class="table-wrap">
+<table>
+  <tr><th>#</th><th>Date</th><th>Session</th><th>COs / Bloom</th><th>Pedagogy &amp; tools</th>{% if request.is_course_teacher %}<th class="no-print"></th>{% endif %}</tr>
+  {% for r in rows %}{% with i=r.item %}
+  <tr id="item-{{ i.pk }}" class="{% if r.delivered %}highlight{% endif %}">
+    <td>{{ i.sequence }}</td>
+    <td style="white-space:nowrap">{% if r.session %}<a href="{% url 'session_detail' course.pk r.session.pk %}">{{ r.session.date|date:"D j M" }}</a>{% if r.delivered %}<br><span class="badge ok">Delivered</span>{% endif %}{% else %}<span class="sub">unscheduled</span>{% endif %}</td>
+    <td><span class="badge">{{ i.get_session_type_display }}</span>{% if i.unit %} <span class="sub">Unit {{ i.unit.number }}</span>{% endif %}<br>
+      <strong>{{ i.title }}</strong><div class="plan-meta">{{ i.objective }}</div>
+      {% if i.pre_class or i.post_class %}<details class="plan-meta"><summary>Before / in / after class</summary>
+        <p><strong>Before:</strong> {{ i.pre_class }}</p><p><strong>In class:</strong> {{ i.in_class }}</p><p><strong>After:</strong> {{ i.post_class }}</p>{% if i.resources %}<p><strong>Resources:</strong> {{ i.resources|urlize }}</p>{% endif %}</details>{% endif %}
+    </td>
+    <td>{% for o in i.outcomes.all %}<span class="badge info">{{ o.code }}</span> {% endfor %}<br><span class="sub">{{ i.bloom_level|bloom }}</span></td>
+    <td><div class="sub">{{ i.pedagogy }}</div><div class="tools">{% for t in i.tools|lines %}<span>{{ t }}</span>{% endfor %}</div></td>
+    {% if request.is_course_teacher %}<td class="no-print" style="white-space:nowrap">
+      <form method="post" action="{% url 'plan_item_move' course.pk i.pk %}" class="inline">{% csrf_token %}<button name="direction" value="up" class="btn small ghost" title="Move up">↑</button><button name="direction" value="down" class="btn small ghost" title="Move down">↓</button></form>
+      <a class="btn small" href="{% url 'plan_item_edit' course.pk i.pk %}">Edit</a>
+      <a class="btn small ghost" href="{% url 'plan_item_add' course.pk %}?after={{ i.sequence }}" title="Insert after">＋</a>
+    </td>{% endif %}
+  </tr>{% endwith %}
+  {% empty %}<tr><td colspan="6" class="empty">No plan yet.{% if request.is_course_teacher %} Use “Regenerate” to build it from the syllabus.{% endif %}</td></tr>{% endfor %}
+</table>
+</div>
+{% endblock %}

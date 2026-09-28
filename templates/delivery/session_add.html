@@ -1,0 +1,5 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="card" style="max-width:700px"><h2>Add an extra class</h2>
+  <form method="post">{% csrf_token %}<div class="form-grid">{% include "includes/form_fields.html" %}</div><button class="btn primary">Add</button></form></div>
+{% endblock %}

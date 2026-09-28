@@ -1,0 +1,59 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="grid cols-2">
+  <div class="stack">
+    <div class="card">
+      <h2>Delivery progress</h2>
+      <div class="meter"><div class="progress ok"><span style="width:{{ progress.percent }}%"></span></div><strong>{{ progress.percent }}%</strong></div>
+      <p class="sub">{{ progress.delivered }} of {{ progress.total }} planned sessions delivered{% if progress.behind %} · <span class="badge warn">{{ progress.behind }} behind schedule</span>{% endif %}</p>
+      {% if my_attendance %}<p>Your attendance: <span class="badge {{ my_attendance.percent|att_class }}">{{ my_attendance.percent|pct:1 }}</span> ({{ my_attendance.present }}/{{ my_attendance.total }})</p>{% endif %}
+    </div>
+    {% if not request.is_course_teacher %}
+    <div class="card">
+      <h2>Mark attendance</h2>
+      <form method="post" action="{% url 'student_checkin' course.pk %}" class="row">{% csrf_token %}
+        <input type="text" name="code" placeholder="6-digit code from your teacher" inputmode="numeric" style="max-width:16rem" required>
+        <button class="btn primary">Check in</button>
+      </form>
+    </div>
+    {% endif %}
+    <div class="card">
+      <h2>Upcoming classes</h2>
+      {% for s in upcoming %}
+        <div class="row between" style="padding:.3rem 0;border-bottom:1px solid var(--border)">
+          <span><strong>{{ s.date|date:"D j M" }}</strong> {{ s.start_time|time:"H:i" }} · {{ s.get_session_type_display }}</span>
+          <a href="{% url 'session_detail' course.pk s.pk %}" class="sub">{{ s.plan_item.title|default:"Buffer / revision"|truncatechars:55 }}</a>
+        </div>
+      {% empty %}<p class="sub">No sessions scheduled yet.{% if request.is_course_teacher %} <a href="{% url 'timetable' course.pk %}">Add a timetable</a>.{% endif %}</p>{% endfor %}
+    </div>
+    {% if announcements %}<div class="card"><h2>Latest in stream</h2>
+      {% for a in announcements %}<p><strong>{{ a.author.display_name }}</strong> <span class="sub">{{ a.created_at|timesince }} ago</span><br>{{ a.text|linebreaksbr }}</p>{% endfor %}
+    </div>{% endif %}
+  </div>
+  <div class="stack">
+    {% if checklist %}
+    <div class="card accent">
+      <h2>Course setup</h2>
+      <ul class="checklist">
+        {% for label, done, url in checklist %}
+          <li><span class="dot {% if done %}done{% endif %}">{% if done %}✓{% endif %}</span><a href="{% url url course.pk %}">{{ label }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% if at_risk %}<div class="card"><h2>Attendance alerts</h2>
+      {% for s in at_risk %}<span class="badge bad">{{ s }}</span> {% endfor %}
+    </div>{% endif %}
+    {% endif %}
+    <div class="card">
+      <h2>Course outcomes</h2>
+      {% for o in outcomes %}<p><span class="badge info">{{ o.code }}</span> {{ o.description }} <span class="sub">({{ o.bloom_level|bloom }})</span></p>
+      {% empty %}<p class="sub">No outcomes defined.</p>{% endfor %}
+    </div>
+    <div class="card">
+      <h2>Units</h2>
+      {% for u in units %}<details><summary>Unit {{ u.number }}: {{ u.title }} <span class="sub">{{ u.hours }}h · {% for o in u.outcomes.all %}{{ o.code }} {% endfor %}</span></summary>
+        <ul>{% for t in u.topics.all %}<li>{{ t.title }}</li>{% endfor %}</ul></details>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

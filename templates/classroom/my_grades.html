@@ -1,0 +1,24 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head"><div><h2 style="margin:0">{% if student != user %}{{ student.display_name }} — {% endif %}Grades</h2>
+  <p class="sub">Running total based on work graded so far.</p></div></div>
+{% if row %}
+<div class="grid cols-4">
+  <div class="card"><div class="stat">{{ row.final_percent|pct:1 }}</div><div class="stat-label">current weighted score</div></div>
+  <div class="card"><div class="stat">{{ row.grade }}</div><div class="stat-label">grade{% if row.grade_point is not None %} · {{ row.grade_point }} GP{% endif %}</div></div>
+  {% for comp in row.components %}<div class="card"><div class="stat">{{ comp.marks|num }}<span class="sub">/{{ comp.component.max_marks|num }}</span></div><div class="stat-label">{{ comp.component.name }} ({{ comp.component.weight|num }}%)</div></div>{% endfor %}
+</div>
+{% endif %}
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card">
+    <h3>Course outcome profile</h3>
+    {% for p in co_profile %}<div style="margin:.4rem 0"><div class="row between"><span><span class="badge info">{{ p.outcome.code }}</span> {{ p.outcome.description|truncatechars:70 }}</span><strong>{{ p.percent|pct }}</strong></div>
+      <div class="progress {% if p.percent >= p.outcome.target_percent %}ok{% endif %}"><span style="width:{{ p.percent|default:0 }}%"></span></div></div>{% endfor %}
+  </div>
+  <div class="card">
+    <h3>Returned work</h3>
+    <table class="compact">{% for s in subs %}<tr><td><a href="{% url 'assignment_detail' course.pk s.assignment_id %}">{{ s.assignment.title }}</a></td><td class="num">{{ s.score|num }}/{{ s.assignment.max_points|num }}</td></tr>
+    {% empty %}<tr><td class="sub">Nothing graded yet.</td></tr>{% endfor %}</table>
+  </div>
+</div>
+{% endblock %}

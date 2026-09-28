@@ -1,0 +1,37 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="grid cols-2">
+  <div class="card">
+    <h2 style="margin-top:0">{{ a.title }}</h2>
+    <p class="sub">{{ course.teacher.display_name }} · {{ a.max_points|num }} points{% if a.due_at %} · due {{ a.due_at|date:"D j M, H:i" }}{% endif %}</p>
+    <div class="notes-body">{{ a.instructions|urlize }}</div>
+    {% if a.attachment %}<p><a class="btn" href="{{ a.attachment.url }}">📎 Attachment</a></p>{% endif %}
+    {% if a.reference_link %}<p><a href="{{ a.reference_link }}" target="_blank" rel="noopener">{{ a.reference_link }}</a></p>{% endif %}
+    {% if rubric_rows %}
+      <h3>Rubric{% if sub.status == 'returned' %} — your scores{% endif %}</h3>
+      <table class="compact">
+        {% for r in rubric_rows %}<tr><td><strong>{{ r.criterion.title }}</strong>{% if r.criterion.outcome %} <span class="badge info">{{ r.criterion.outcome.code }}</span>{% endif %}
+          <div class="sub">{% for l in r.criterion.levels.all %}{{ l.label }} ({{ l.points|num }}): {{ l.descriptor }}{% if not forloop.last %} · {% endif %}{% endfor %}</div>
+          {% if r.score.comment %}<div>💬 {{ r.score.comment }}</div>{% endif %}</td>
+          <td class="num" style="white-space:nowrap">{% if r.score %}<strong>{{ r.score.points|num }}</strong>{% else %}–{% endif %} / {{ r.criterion.max_points|num }}{% if r.score.level %}<br><span class="badge">{{ r.score.level.label }}</span>{% endif %}</td></tr>{% endfor %}
+      </table>
+    {% endif %}
+  </div>
+  <div class="card">
+    <div class="row between"><h3 style="margin:0">Your work</h3>
+      {% if sub.status == 'returned' %}<span class="badge ok">Graded: {{ sub.score|num }}/{{ a.max_points|num }}</span>{% elif sub.status == 'turned_in' %}<span class="badge info">Turned in {{ sub.submitted_at|date:"j M H:i" }}{% if sub.is_late %} (late){% endif %}</span>{% elif a.is_overdue %}<span class="badge bad">Missing</span>{% else %}<span class="badge">Assigned</span>{% endif %}</div>
+    {% if sub.feedback %}<div class="card flat" style="margin:.6rem 0;background:var(--primary-soft)"><strong>Feedback:</strong> {{ sub.feedback|linebreaksbr }}</div>{% endif %}
+    <form method="post" enctype="multipart/form-data" style="margin-top:.6rem">{% csrf_token %}
+      {% if sub.status == 'assigned' %}
+        {% include "includes/form_fields.html" %}
+        <div class="row"><button name="action" value="turn_in" class="btn primary">Turn in</button><button name="action" value="save" class="btn">Save draft</button></div>
+      {% else %}
+        {% if sub.text %}<div class="notes-body">{{ sub.text }}</div>{% endif %}
+        {% if sub.file %}<p><a href="{{ sub.file.url }}">📎 {{ sub.file.name }}</a></p>{% endif %}
+        {% if sub.link %}<p><a href="{{ sub.link }}" target="_blank" rel="noopener">{{ sub.link }}</a></p>{% endif %}
+        {% if sub.status == 'turned_in' %}<button name="action" value="unsubmit" class="btn">Unsubmit</button>{% endif %}
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

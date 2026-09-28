@@ -1,0 +1,42 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h2 style="margin:0">{{ a.title }}</h2>
+    <p class="sub">{{ a.get_kind_display }} · {{ a.max_points|num }} points{% if a.due_at %} · due {{ a.due_at|date:"D j M, H:i" }}{% endif %}{% if a.component %} · counts toward {{ a.component }}{% endif %}
+      {% for o in a.outcomes.all %}<span class="badge info">{{ o.code }}</span>{% endfor %}</p>
+    {% if a.is_published %}<span class="badge ok">Published</span>{% else %}<span class="badge">Draft — students can't see it yet</span>{% endif %}
+  </div>
+  <div class="row">
+    <a class="btn" href="{% url 'assignment_edit' course.pk a.pk %}">Edit</a>
+    <form method="post" action="{% url 'assignment_status' course.pk a.pk %}" class="inline">{% csrf_token %}
+      {% if a.is_published %}<button name="action" value="unpublish" class="btn ghost">Unpublish</button>{% else %}<button name="action" value="publish" class="btn primary">Publish</button>{% endif %}
+      <button name="action" value="delete" class="btn danger" data-confirm="Delete this assignment and all submissions?">Delete</button>
+    </form>
+  </div>
+</div>
+<div class="grid cols-4" style="margin-bottom:1rem">
+  <div class="card"><div class="stat">{{ stats.turned_in }}</div><div class="stat-label">turned in, to grade</div></div>
+  <div class="card"><div class="stat">{{ stats.returned }}</div><div class="stat-label">graded &amp; returned</div></div>
+  <div class="card"><div class="stat">{{ stats.missing }}</div><div class="stat-label">not submitted</div></div>
+  <div class="card"><form method="post" action="{% url 'return_all' course.pk a.pk %}">{% csrf_token %}<button class="btn small">Return all graded</button></form>
+    <form method="post" action="{% url 'import_grades' course.pk a.pk %}" enctype="multipart/form-data" style="margin-top:.4rem">{% csrf_token %}
+      <input type="file" name="file" accept=".csv" style="font-size:.8rem"><button class="btn small">Import CSV</button></form></div>
+</div>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="quick_grade">
+<div class="table-wrap"><table>
+  <tr><th>Student</th><th>Status</th><th>Work</th><th class="num">Score /{{ a.max_points|num }}</th><th></th></tr>
+  {% for r in rows %}<tr>
+    <td>{{ r.student }}</td>
+    <td>{% if r.sub.status == 'returned' %}<span class="badge ok">Returned</span>{% elif r.sub.status == 'turned_in' %}<span class="badge info">Turned in{% if r.sub.is_late %} late{% endif %}</span>{% elif a.is_overdue %}<span class="badge bad">Missing</span>{% else %}<span class="badge">Assigned</span>{% endif %}
+      {% if r.sub.score_source == 'total' %}<span class="badge" title="Total distributed across rubric criteria">↔ rubric</span>{% endif %}</td>
+    <td>{% if r.sub.file %}<a href="{{ r.sub.file.url }}">file</a> {% endif %}{% if r.sub.link %}<a href="{{ r.sub.link }}" target="_blank" rel="noopener">link</a> {% endif %}{% if r.sub.text %}<span class="sub">{{ r.sub.text|truncatechars:50 }}</span>{% endif %}</td>
+    <td class="num"><input class="cell" type="number" step="0.25" min="0" max="{{ a.max_points }}" name="score-{{ r.student.pk }}" value="{{ r.sub.score|default_if_none:'' }}"></td>
+    <td><a class="btn small {% if r.sub.status == 'turned_in' %}primary{% endif %}" href="{% url 'grade_submission' course.pk a.pk r.student.pk %}">{% if criteria %}Grade with rubric{% else %}Grade{% endif %}</a></td>
+  </tr>{% empty %}<tr><td colspan="5" class="empty">No students enrolled.</td></tr>{% endfor %}
+</table></div>
+{% if rows %}<div class="row" style="margin-top:.6rem"><button class="btn primary">Save quick grades</button><label style="font-weight:400;margin:0"><input type="checkbox" name="return" value="1" checked> return to students</label>
+  {% if criteria %}<span class="sub">Totals are distributed across rubric criteria automatically (for CO attainment).</span>{% endif %}</div>{% endif %}
+</form>
+{% if a.instructions %}<div class="card" style="margin-top:1rem"><h3>Instructions</h3><div class="notes-body">{{ a.instructions|urlize }}</div></div>{% endif %}
+{% endblock %}

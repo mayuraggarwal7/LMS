@@ -1,0 +1,44 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Review course{% endblock %}
+{% block content %}
+<div class="steps"><span>Upload syllabus</span><span class="on">Review what we found</span><span>Course is ready</span></div>
+<div class="page-head">
+  <div><h1>Review &amp; confirm</h1>
+  {% if has_draft %}<p class="sub">Found {{ stats.units }} units, {{ stats.topics }} topics, {{ stats.outcomes }} course outcomes{% if stats.hours %}, {{ stats.hours }} teaching hours{% endif %}{% if stats.experiments %} and {{ stats.experiments }} experiments{% endif %}{% if used_ai %} (AI-assisted){% endif %}. Fix anything that looks off.</p>
+  {% else %}<p class="sub">Type your course structure below.</p>{% endif %}</div>
+</div>
+<form method="post">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="grid cols-2">
+    <div class="card">
+      <h2>Course</h2>
+      <div class="form-grid">
+        {% field form.code %}{% field form.title %}
+        {% field form.department %}{% field form.division %}
+        {% field form.year %}{% field form.semester %}
+        {% field form.academic_year %}{% field form.credits %}
+        {% field form.lecture_hours %}{% field form.tutorial_hours %}
+        {% field form.practical_hours %}<div></div>
+        {% field form.start_date %}{% field form.end_date %}
+      </div>
+      {% field form.prerequisites %}
+      {% field form.outcomes_text %}
+      {% field form.textbooks_text %}
+      {% field form.references_text %}
+      {% field form.experiments_text %}
+    </div>
+    <div class="card">
+      <h2>Units &amp; topics</h2>
+      {% field form.units_text %}
+    </div>
+  </div>
+  <div class="card" style="margin-top:1rem">
+    <h2>Set up automatically</h2>
+    <div class="grid cols-3">
+      {% field form.opt_plan %}{% field form.opt_scheme %}{% field form.opt_rubrics %}
+      {% field form.opt_questions %}{% field form.opt_assignments %}{% field form.opt_exams %}
+    </div>
+    <button class="btn primary big">Create course &amp; generate everything</button>
+  </div>
+</form>
+{% endblock %}

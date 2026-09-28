@@ -1,0 +1,24 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Exams &amp; assessments</h2>
+  {% if request.is_course_teacher %}<p class="sub">{{ question_count }} questions in the bank. Papers are assembled from the bank by blueprint (marks per band, units, Bloom &amp; CO balance).</p>{% endif %}</div>
+  {% if request.is_course_teacher %}<div class="row">
+    <a class="btn" href="{% url 'exam_scheme' course.pk %}">Assessment scheme</a>
+    <a class="btn" href="{% url 'question_bank' course.pk %}">Question bank</a>
+    <a class="btn primary" href="{% url 'exam_new' course.pk %}">+ New exam paper</a></div>{% endif %}
+</div>
+{% if request.is_course_teacher and components %}
+<div class="row" style="margin-bottom:1rem">{% for c in components %}<span class="badge info">{{ c.name }} · {{ c.weight|num }}%</span>{% endfor %}</div>
+{% endif %}
+<div class="table-wrap"><table>
+  <tr><th>Exam</th><th>Component</th><th>Date</th><th>Marks</th><th>Status</th>{% if request.is_course_teacher %}<th>Results</th><th></th>{% endif %}</tr>
+  {% for r in rows %}{% with e=r.exam %}<tr>
+    <td><a href="{% url 'exam_detail' course.pk e.pk %}"><strong>{{ e.title }}</strong></a><br><span class="sub">{% for u in e.units.all %}U{{ u.number }} {% endfor %}· {{ e.duration_minutes }} min</span></td>
+    <td>{{ e.component|default:"–" }}</td><td>{{ e.date|date:"D j M Y"|default:"TBD" }}</td><td class="num">{{ e.total_marks|num }}</td>
+    <td>{% if e.status == 'marked' %}<span class="badge ok">{{ e.get_status_display }}</span>{% elif e.status == 'published' %}<span class="badge info">{{ e.get_status_display }}</span>{% else %}<span class="badge">Draft</span>{% endif %}</td>
+    {% if request.is_course_teacher %}<td>{% if r.summary %}avg {{ r.summary.average|num }} · pass {{ r.summary.pass_rate|pct }}{% else %}<span class="sub">–</span>{% endif %}</td>
+    <td class="right" style="white-space:nowrap"><a class="btn small" href="{% url 'exam_print' course.pk e.pk %}">Print</a> <a class="btn small primary" href="{% url 'exam_marks' course.pk e.pk %}">Enter marks</a></td>{% endif %}
+  </tr>{% endwith %}{% empty %}<tr><td colspan="7" class="empty">No exams yet.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

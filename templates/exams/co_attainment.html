@@ -1,0 +1,17 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head"><div><h2 style="margin:0">Course outcome attainment</h2>
+  <p class="sub">Direct attainment from CO-tagged exam questions and rubric criteria. A student attains a CO when they score at least its target %.
+  Level 3: ≥70% of students attain · Level 2: ≥60% · Level 1: ≥50%. Overall combines internal and ESE levels.</p></div></div>
+<div class="table-wrap"><table>
+  <tr><th>CO</th><th>Target</th><th>Internal (ISE/MSE/TW + rubrics)</th><th>End-semester (ESE)</th><th>Overall</th></tr>
+  {% for r in report %}<tr>
+    <td><span class="badge info">{{ r.outcome.code }}</span> {{ r.outcome.description|truncatechars:80 }}</td>
+    <td>{{ r.outcome.target_percent }}%</td>
+    <td>{% if r.internal.assessed %}<span class="badge {{ r.internal.level|level_class }}">Level {{ r.internal.level }}</span> {{ r.internal.attained }}/{{ r.internal.assessed }} students ({{ r.internal.percent_students|pct }}) · avg {{ r.internal.average|pct }}{% else %}<span class="sub">not assessed yet</span>{% endif %}</td>
+    <td>{% if r.ese.assessed %}<span class="badge {{ r.ese.level|level_class }}">Level {{ r.ese.level }}</span> {{ r.ese.attained }}/{{ r.ese.assessed }} students ({{ r.ese.percent_students|pct }}) · avg {{ r.ese.average|pct }}{% else %}<span class="sub">not assessed yet</span>{% endif %}</td>
+    <td><strong>{{ r.overall|default_if_none:"–" }}</strong></td>
+  </tr>{% empty %}<tr><td colspan="5" class="empty">No course outcomes defined.</td></tr>{% endfor %}
+</table></div>
+<p class="sub" style="margin-top:.8rem">Tip: COs with no evidence need at least one CO-tagged question or rubric criterion. Map rubric criteria to COs in <a href="{% url 'rubric_list' course.pk %}">Rubrics</a>.</p>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}New course{% endblock %}
+{% block content %}
+<div class="steps"><span class="on">Upload syllabus</span><span>Review what we found</span><span>Course is ready</span></div>
+<h1>Create a course from your syllabus</h1>
+<p class="sub">We read your syllabus and set up the whole course for you. You can review and fix everything before it's created.</p>
+<form method="post" enctype="multipart/form-data" class="grid cols-2" style="margin-top:1rem">{% csrf_token %}
+  <div class="card">
+    <h2>1. Syllabus</h2>
+    {{ form.non_field_errors }}
+    {% field form.syllabus_file %}
+    {% field form.syllabus_text %}
+    {% if ai_enabled %}{% field form.use_ai %}{% else %}<p class="sub">Tip: set <code>ANTHROPIC_API_KEY</code> on the server to enable AI-assisted parsing and question writing. The built-in parser works without it.</p>{% endif %}
+  </div>
+  <div class="card">
+    <h2>2. Class details</h2>
+    <div class="form-grid">
+      {% field form.year %}{% field form.semester %}
+      {% field form.department %}{% field form.division %}
+      {% field form.academic_year %}<div></div>
+      {% field form.start_date %}{% field form.end_date %}
+    </div>
+    <p class="sub">The year of study tunes pedagogy: first-years get more scaffolding and demos; final-years get case studies, PBL and research discussions.</p>
+    <button class="btn primary big">Analyse syllabus →</button>
+    <a class="btn ghost" href="{% url 'course_review' %}">or start from a blank course</a>
+  </div>
+</form>
+{% endblock %}

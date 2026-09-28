@@ -1,0 +1,20 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="card" style="max-width:860px">
+  <div class="sub">{{ session.date|date:"l j F Y" }} · {{ session.start_time|time:"H:i" }} · {{ session.get_session_type_display }}</div>
+  <h2 style="margin:.2rem 0">{{ session.plan_item.title|default:"Class" }}</h2>
+  {% if record %}<p>Your attendance: <span class="badge {% if record.counts_present %}ok{% else %}bad{% endif %}">{{ record.get_status_display }}</span></p>{% endif %}
+  {% if session.plan_item %}
+    <p>{{ session.plan_item.objective }}</p>
+    <dl class="kv"><dt>Prepare</dt><dd>{{ session.plan_item.pre_class }}</dd><dt>After class</dt><dd>{{ session.plan_item.post_class }}</dd></dl>
+    <div class="tools" style="margin-top:.5rem">{% for t in session.plan_item.tools|lines %}<span>{{ t }}</span>{% endfor %}</div>
+  {% endif %}
+  {% if session.notes_shared and session.status == 'completed' %}
+    <h3>Class notes</h3>
+    {% if session.actual_topics %}<p><strong>Covered:</strong> {{ session.actual_topics }}</p>{% endif %}
+    <div class="notes-body">{{ session.notes|urlize }}</div>
+    {% if session.notes_file %}<p><a class="btn" href="{{ session.notes_file.url }}">Download notes</a></p>{% endif %}
+    {% if session.resource_link %}<p><a class="btn" href="{{ session.resource_link }}" target="_blank" rel="noopener">Slides / recording</a></p>{% endif %}
+  {% endif %}
+</div>
+{% endblock %}

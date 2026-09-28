@@ -1,0 +1,65 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <div class="sub">{{ session.date|date:"l j F Y" }} · {{ session.start_time|time:"H:i" }}–{{ session.end_time|time:"H:i" }} · {{ session.get_session_type_display }}{% if session.room %} · {{ session.room }}{% endif %}</div>
+    <h2 style="margin:.2rem 0">{{ session.plan_item.title|default:"Buffer / revision session" }}</h2>
+    {% if session.status == 'completed' %}<span class="badge ok">Delivered</span>{% elif session.status == 'cancelled' %}<span class="badge bad">Cancelled</span>{% else %}<span class="badge">Scheduled</span>{% endif %}
+  </div>
+  <div class="row">
+    {% if prev %}<a class="btn small" href="{% url 'session_detail' course.pk prev.pk %}">← Previous</a>{% endif %}
+    {% if next %}<a class="btn small" href="{% url 'session_detail' course.pk next.pk %}">Next →</a>{% endif %}
+  </div>
+</div>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+<div class="grid cols-2">
+  <div class="stack">
+    {% if session.plan_item %}{% with i=session.plan_item %}
+    <div class="card">
+      <h3>Plan for this session</h3>
+      <p>{{ i.objective }}</p>
+      <p>{% for o in i.outcomes.all %}<span class="badge info">{{ o.code }}</span> {% endfor %}<span class="badge">{{ i.bloom_level|bloom }}</span></p>
+      <dl class="kv"><dt>Pedagogy</dt><dd>{{ i.pedagogy }}</dd><dt>Before</dt><dd>{{ i.pre_class }}</dd><dt>In class</dt><dd>{{ i.in_class }}</dd><dt>After</dt><dd>{{ i.post_class }}</dd></dl>
+      <div class="tools" style="margin-top:.5rem">{% for t in i.tools|lines %}<span>{{ t }}</span>{% endfor %}</div>
+      <a class="btn small ghost" href="{% url 'plan_item_edit' course.pk i.pk %}">Edit plan item</a>
+    </div>{% endwith %}{% endif %}
+    <div class="card">
+      <h3>What actually happened</h3>
+      {{ form.non_field_errors }}
+      {% field form.coverage %}
+      <label style="font-weight:400"><input type="checkbox" name="carry_over" value="1"> If partially covered, carry the rest over to the next class (shifts the plan)</label>
+      {% field form.actual_topics %}
+      {% field form.notes %}
+      <div class="form-grid">{% field form.notes_file %}{% field form.resource_link %}</div>
+      {% field form.notes_shared %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="row between"><h3 style="margin:0">Attendance <span class="sub">{{ present }}/{{ roster|length }} present</span></h3>
+      <div class="row"><button class="btn small" data-mark-all="P">All present</button><button class="btn small ghost" data-mark-all="A">All absent</button></div></div>
+    <div class="card flat" style="margin:.6rem 0;padding:.6rem">
+      {% if session.checkin_open %}Self check-in is <strong>open</strong>. Students enter code <span class="code-box">{{ session.checkin_code }}</span> on the course page.
+      {% else %}<span class="sub">Let students mark themselves present from their phones with a one-time code.</span>{% endif %}
+      <button name="action" value="checkin" class="btn small" formnovalidate>{% if session.checkin_open %}Close check-in{% else %}Open self check-in{% endif %}</button>
+    </div>
+    <table class="compact">
+      {% for r in roster %}
+      <tr><td>{{ r.student.roll_no }}</td><td>{{ r.student.display_name }}{% if r.record.self_checked_in %} <span class="badge info">self</span>{% endif %}</td>
+        <td class="right"><span class="att-toggle">
+          <label><input type="radio" name="att-{{ r.student.pk }}" value="P" {% if not r.record and not has_records or r.record.status == 'P' %}checked{% endif %}>P</label>
+          <label><input type="radio" name="att-{{ r.student.pk }}" value="A" {% if r.record.status == 'A' or has_records and not r.record %}checked{% endif %}>A</label>
+          <label><input type="radio" name="att-{{ r.student.pk }}" value="L" {% if r.record.status == 'L' %}checked{% endif %}>Late</label>
+          <label><input type="radio" name="att-{{ r.student.pk }}" value="E" {% if r.record.status == 'E' %}checked{% endif %}>OD</label>
+        </span></td></tr>
+      {% empty %}<tr><td class="sub">No students enrolled yet.</td></tr>{% endfor %}
+    </table>
+  </div>
+</div>
+<div class="card row" style="margin-top:1rem;position:sticky;bottom:0">
+  <button name="action" value="save" class="btn">Save</button>
+  {% if session.status != 'completed' %}<button name="action" value="complete" class="btn primary big">✓ Save &amp; mark delivered</button>{% endif %}
+  {% if session.status == 'scheduled' %}<button name="action" value="cancel" class="btn danger" formnovalidate data-confirm="Cancel this class? The plan will shift to the next slot.">Cancel class</button>{% endif %}
+  {% if session.status != 'scheduled' %}<button name="action" value="reopen" class="btn ghost" formnovalidate>Reopen</button>{% endif %}
+</div>
+</form>
+{% endblock %}

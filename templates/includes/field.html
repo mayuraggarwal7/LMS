@@ -1,0 +1,10 @@
+<div class="field{% if f.field.widget.input_type == 'checkbox' %} checks{% endif %}">
+  {% if f.field.widget.input_type == 'checkbox' and not f.field.widget.allow_multiple_selected %}
+    <label>{{ f }} {{ f.label }}</label>
+  {% else %}
+    <label for="{{ f.id_for_label }}">{{ f.label }}{% if f.field.required %} *{% endif %}</label>
+    {{ f }}
+  {% endif %}
+  {% if f.help_text %}<span class="help">{{ f.help_text|safe }}</span>{% endif %}
+  {{ f.errors }}
+</div>
