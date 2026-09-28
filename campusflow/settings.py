@@ -24,7 +24,9 @@ for _host in (os.environ.get("RENDER_EXTERNAL_HOSTNAME"), os.environ.get("RAILWA
     if _host:
         ALLOWED_HOSTS.append(_host)
 CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h not in ("localhost", "127.0.0.1")]
-if not DEBUG:
+# Behind an HTTPS host (Render/Railway, or DJANGO_HTTPS=1): trust the proxy and use secure cookies.
+if not DEBUG and (os.environ.get("RENDER_EXTERNAL_HOSTNAME") or os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+                  or os.environ.get("DJANGO_HTTPS") == "1"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = True
 
