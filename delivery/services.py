@@ -14,7 +14,8 @@ from .models import AttendanceRecord, ClassSession
 
 
 def occurrences(course):
-    """All (date, slot) pairs between the course start and end dates, skipping holidays."""
+    """All (date, slot) pairs for the term: weekly slots between the start and end dates, skipping
+    holidays, plus supplementary days that run another weekday's timetable."""
     if not course.start_date or not course.end_date:
         return []
     holidays = set(course.holidays.values_list("date", flat=True))
@@ -27,6 +28,13 @@ def occurrences(course):
                 if slot.weekday == day.weekday():
                     result.append((day, slot))
         day += timedelta(days=1)
+    for extra in course.supplementary_days.all():
+        if extra.date in holidays:
+            continue
+        for slot in slots:
+            if slot.weekday == extra.follows_weekday:
+                result.append((extra.date, slot))
+    result.sort(key=lambda pair: (pair[0], pair[1].start_time))
     return result
 
 
@@ -78,11 +86,9 @@ def sync_timetable(course):
     delivered = set(
         course.sessions.filter(status=ClassSession.COMPLETED, plan_item__isnull=False).values_list("plan_item_id", flat=True)
     )
-    open_sessions = list(
-        course.sessions.filter(status=ClassSession.SCHEDULED).exclude(is_extra=True).order_by("date", "start_time")
-    )
-    # sessions locked because of notes/attendance keep their mapping
-    locked_items = {s.plan_item_id for s in open_sessions if s.is_locked and s.plan_item_id}
+    open_sessions = list(course.sessions.filter(status=ClassSession.SCHEDULED).order_by("date", "start_time"))
+    # sessions with notes/attendance or a hand-picked plan item keep their mapping
+    locked_items = {s.plan_item_id for s in open_sessions if s.keeps_plan_item and s.plan_item_id}
     queue_by_type = {}
     for item in course.plan_items.order_by("sequence"):
         if item.pk in delivered or item.pk in locked_items:
@@ -96,7 +102,7 @@ def sync_timetable(course):
             queue_by_type["lecture"].sort(key=lambda i: i.sequence)
 
     for session in open_sessions:
-        if session.is_locked and session.plan_item_id:
+        if session.keeps_plan_item and session.plan_item_id:
             continue
         queue = queue_by_type.get(session.session_type) or []
         item = queue.pop(0) if queue else None
@@ -130,6 +136,70 @@ def carry_over(session):
     new.outcomes.set(item.outcomes.all())
     sync_timetable(course)
     return new
+
+
+@transaction.atomic
+def declare_holiday(courses, day, name, reason_prefix="Holiday"):
+    """Sudden holiday: cancel that day's scheduled classes in the given courses and shift their plans.
+
+    Classes already delivered (or with attendance) are left alone. Returns per-course sync summaries.
+    """
+    from .models import Holiday
+
+    results = {}
+    for course in courses:
+        Holiday.objects.update_or_create(course=course, date=day, defaults={"name": name})
+        for session in course.sessions.filter(date=day, status=ClassSession.SCHEDULED):
+            if session.attendance.exists():
+                continue
+            session.status = ClassSession.CANCELLED
+            session.cancel_reason = f"{reason_prefix}: {name}" if name else reason_prefix
+            session.plan_pinned = False
+            session.save(update_fields=["status", "cancel_reason", "plan_pinned"])
+        results[course] = sync_timetable(course)
+    return results
+
+
+@transaction.atomic
+def add_supplementary_day(courses, day, follows_weekday, reason=""):
+    """Extra teaching day running another weekday's timetable; the plan pulls forward onto it."""
+    from .models import Holiday, SupplementaryDay
+
+    results = {}
+    for course in courses:
+        Holiday.objects.filter(course=course, date=day).delete()
+        SupplementaryDay.objects.update_or_create(
+            course=course, date=day, defaults={"follows_weekday": follows_weekday, "reason": reason})
+        if course.end_date and day > course.end_date:
+            pass  # compensation after the last teaching day still counts; occurrences() includes it
+        results[course] = sync_timetable(course)
+    return results
+
+
+@transaction.atomic
+def reschedule_session(session, new_date, start_time, end_time, room=""):
+    """Move one class: the original is kept as cancelled ('rescheduled to ...'), a new class takes its plan item."""
+    new = ClassSession.objects.create(
+        course=session.course, date=new_date, start_time=start_time, end_time=end_time,
+        session_type=session.session_type, room=room or session.room, is_extra=True,
+        plan_item=session.plan_item, plan_pinned=bool(session.plan_item),
+    )
+    session.status = ClassSession.CANCELLED
+    session.cancel_reason = f"Rescheduled to {new_date:%d %b %Y} {start_time:%H:%M}"
+    session.plan_pinned = False
+    session.save(update_fields=["status", "cancel_reason", "plan_pinned"])
+    sync_timetable(session.course)
+    return new
+
+
+def capacity(course):
+    """Teaching capacity vs plan: how many sessions remain vs plan items still to deliver."""
+    delivered = set(course.sessions.filter(status=ClassSession.COMPLETED, plan_item__isnull=False)
+                    .values_list("plan_item_id", flat=True))
+    remaining_items = course.plan_items.exclude(pk__in=delivered).count()
+    open_sessions = course.sessions.filter(status=ClassSession.SCHEDULED).count()
+    return {"remaining_items": remaining_items, "open_sessions": open_sessions,
+            "shortfall": max(0, remaining_items - open_sessions)}
 
 
 def plan_progress(course):

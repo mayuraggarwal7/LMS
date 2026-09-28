@@ -12,7 +12,8 @@ class User(AbstractUser):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=STUDENT)
     department = models.CharField(max_length=120, blank=True)
     year_of_study = models.PositiveSmallIntegerField(choices=YEAR_CHOICES, null=True, blank=True)
-    roll_no = models.CharField("Roll / PRN number", max_length=40, blank=True)
+    roll_no = models.CharField("Roll number", max_length=40, blank=True)
+    prn = models.CharField("PRN / university number", max_length=40, blank=True)
 
     class Meta:
         ordering = ["roll_no", "first_name", "last_name", "username"]

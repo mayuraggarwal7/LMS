@@ -59,7 +59,7 @@ def co_attainment(course):
     evidence = {o.pk: {"internal": defaultdict(lambda: [Decimal(0), Decimal(0)]),
                        "ese": defaultdict(lambda: [Decimal(0), Decimal(0)])} for o in outcomes}
 
-    marks = ExamMark.objects.filter(exam_question__exam__course=course).select_related(
+    marks = ExamMark.objects.filter(exam_question__exam__course=course, exam_question__exam__purpose="regular").select_related(
         "exam_question__question", "exam_question__exam__component"
     )
     for m in marks:
@@ -109,7 +109,7 @@ def student_co_profile(course, student, released_only=True):
     from classroom.models import CriterionScore
 
     data = defaultdict(lambda: [Decimal(0), Decimal(0)])
-    marks = ExamMark.objects.filter(exam_question__exam__course=course, student=student)
+    marks = ExamMark.objects.filter(exam_question__exam__course=course, exam_question__exam__purpose="regular", student=student)
     if released_only:
         marks = marks.filter(exam_question__exam__status="marked")
     for m in marks.select_related("exam_question__question"):

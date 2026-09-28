@@ -2,6 +2,9 @@
 {% block content %}
 <div class="page-head">
   <div><h2 style="margin:0">{{ exam.title }}</h2>
+    {% if exam.is_retake %}<p><span class="badge warn">{{ exam.get_purpose_display }}</span> for <a href="{% if exam.replaces_exam %}{% url 'exam_detail' course.pk exam.replaces_exam_id %}{% else %}{% url 'assignment_detail' course.pk exam.replaces_assignment_id %}{% endif %}">{{ exam.original.title }}</a>
+      · {{ exam.get_policy_display|lower }} · {{ exam.candidates.count }} student{{ exam.candidates.count|pluralize }}{% if exam.term %} · {{ exam.term }}{% endif %}</p>
+    {% elif exam.retakes.exists %}<p class="sub">Retakes: {% for r in exam.retakes.all %}<a href="{% url 'exam_detail' course.pk r.pk %}">{{ r.title }}</a> ({{ r.candidates.count }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
     <p class="sub">{{ exam.component|default:"No component" }} · {{ exam.date|date:"D j M Y"|default:"date TBD" }} · {{ exam.duration_minutes }} min ·
       paper total <strong>{{ exam.paper_total|num }}</strong> / {{ exam.total_marks|num }}</p></div>
   <div class="row">
@@ -9,6 +12,8 @@
     <a class="btn" href="{% url 'exam_print' course.pk exam.pk %}">Print paper</a>
     <a class="btn" href="{% url 'exam_print' course.pk exam.pk %}?answers=1">Print with marking scheme</a>
     <a class="btn primary" href="{% url 'exam_marks' course.pk exam.pk %}">Enter marks</a>
+    {% if not exam.is_retake %}<a class="btn" href="{% url 'retake_new' course.pk %}?exam={{ exam.pk }}&purpose=reexam">Re-exam</a>
+    <a class="btn" href="{% url 'retake_new' course.pk %}?exam={{ exam.pk }}&purpose=additional">Additional assessment</a>{% endif %}
   </div>
 </div>
 <div class="grid cols-2">

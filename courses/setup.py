@@ -21,8 +21,12 @@ DEFAULT_OPTIONS = {
 
 
 @transaction.atomic
-def build_course(teacher, data, info, options=None):
-    """data: parsed syllabus dict; info: dict of Course field values; options: which artefacts to generate."""
+def build_course(teacher, data, info, options=None, lesson_plan=None):
+    """data: parsed syllabus dict; info: dict of Course field values; options: which artefacts to generate.
+
+    lesson_plan: optional parsed institutional lesson plan (see courses.lessonplan) whose
+    sequence, CO mapping and lecture counts are followed instead of the generated plan.
+    """
     options = {**DEFAULT_OPTIONS, **(options or {})}
     course = Course.objects.create(teacher=teacher, **info)
     summary = {"units": 0, "topics": 0, "outcomes": 0, "plan_items": 0, "rubrics": 0, "questions": 0,
@@ -48,17 +52,23 @@ def build_course(teacher, data, info, options=None):
     for i, text in enumerate(data.get("experiments", []), start=1):
         Experiment.objects.create(course=course, number=i, title=text)
 
-    configure_course(course, options, summary)
+    configure_course(course, options, summary, lesson_plan=lesson_plan)
     return course, summary
 
 
-def configure_course(course, options, summary):
+def configure_course(course, options, summary, lesson_plan=None):
     from classroom.models import Assignment
     from exams.services import create_default_scheme, create_exam, generate_question_bank
 
     outcomes = list(course.outcomes.all())
     if options.get("plan"):
-        summary["plan_items"] = generate_learning_plan(course)
+        if lesson_plan and options.get("lesson_plan", True):
+            from .lessonplan import apply_lesson_plan
+
+            summary["plan_items"] = apply_lesson_plan(course, lesson_plan)
+            summary["from_lesson_plan"] = True
+        else:
+            summary["plan_items"] = generate_learning_plan(course)
 
     components = create_default_scheme(course) if options.get("scheme") else list(course.components.all())
     by_name = {c.name: c for c in components}
@@ -123,10 +133,11 @@ def configure_course(course, options, summary):
         mse = by_name.get("MSE")
         ese = next((c for c in components if c.kind == "ESE"), None)
         start = course.start_date
+        event_dates = _exam_dates_from_lesson_plan(course, lesson_plan)
         if mse:
             exam, warnings = create_exam(
                 course, mse, "Mid-semester examination", mse.max_marks, units[:half], 60,
-                date=start + timedelta(weeks=8) if start else None,
+                date=event_dates.get("MSE") or (start + timedelta(weeks=8) if start else None),
                 blueprint={"short": 20, "medium": 50, "long": 30},
             )
             summary["exams"] += 1
@@ -134,9 +145,26 @@ def configure_course(course, options, summary):
         if ese:
             exam, warnings = create_exam(
                 course, ese, "End-semester examination", ese.max_marks, units, 180,
-                date=course.end_date + timedelta(days=10) if course.end_date else None,
+                date=event_dates.get("ESE") or (course.end_date + timedelta(days=10) if course.end_date else None),
             )
             summary["exams"] += 1
             summary["warnings"] += [f"ESE: {w}" for w in warnings]
     return summary
 
+
+
+def _exam_dates_from_lesson_plan(course, lesson_plan):
+    """MSE/ESE dates written in the lesson plan, when they fall in this course's dates."""
+    from datetime import date
+
+    found = {}
+    for event in (lesson_plan or {}).get("events", []):
+        if event.get("kind") != "exam" or not event.get("exam"):
+            continue
+        when = date.fromisoformat(event["date"])
+        if course.start_date and when < course.start_date:
+            continue
+        if course.end_date and event["exam"] == "MSE" and when > course.end_date:
+            continue
+        found.setdefault(event["exam"], when)
+    return found

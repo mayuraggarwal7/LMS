@@ -8,11 +8,14 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from courses.access import course_member, course_teacher
+from courses.access import course_member, course_teacher, teacher_required
+from courses.models import Course
+from courses.terms import current_term, in_term
 from courses.forms import DATE
 
-from .models import AttendanceRecord, ClassSession, Holiday, TimetableSlot
-from .services import attendance_stats, build_ics, carry_over, plan_progress, sync_timetable
+from .models import WEEKDAYS, AttendanceRecord, ClassSession, Holiday, SupplementaryDay, TimetableSlot
+from .services import (add_supplementary_day, attendance_stats, build_ics, capacity, carry_over, declare_holiday,
+                       plan_progress, reschedule_session, sync_timetable)
 
 TIME = forms.TimeInput(attrs={"type": "time"}, format="%H:%M")
 
@@ -35,6 +38,26 @@ class HolidayForm(forms.ModelForm):
         model = Holiday
         fields = ["date", "name"]
         widgets = {"date": DATE}
+
+
+class SupplementaryForm(forms.ModelForm):
+    class Meta:
+        model = SupplementaryDay
+        fields = ["date", "follows_weekday", "reason"]
+        widgets = {"date": DATE}
+
+
+class RescheduleForm(forms.Form):
+    date = forms.DateField(widget=DATE)
+    start_time = forms.TimeField(widget=TIME)
+    end_time = forms.TimeField(widget=TIME)
+    room = forms.CharField(required=False)
+
+    def clean(self):
+        data = super().clean()
+        if data.get("start_time") and data.get("end_time") and data["end_time"] <= data["start_time"]:
+            raise forms.ValidationError("End time must be after start time.")
+        return data
 
 
 class DatesForm(forms.Form):
@@ -60,6 +83,7 @@ class ExtraSessionForm(forms.ModelForm):
 def timetable(request, course):
     slot_form = SlotForm(prefix="slot")
     holiday_form = HolidayForm(prefix="hol")
+    supp_form = SupplementaryForm(prefix="supp")
     dates_form = DatesForm(initial={"start_date": course.start_date, "end_date": course.end_date}, prefix="dates")
     if request.method == "POST":
         action = request.POST.get("action")
@@ -74,10 +98,21 @@ def timetable(request, course):
         elif action == "holiday":
             holiday_form = HolidayForm(request.POST, prefix="hol")
             if holiday_form.is_valid():
-                Holiday.objects.update_or_create(course=course, date=holiday_form.cleaned_data["date"],
-                                                 defaults={"name": holiday_form.cleaned_data["name"]})
-                messages.success(request, "Holiday added. Sync to reschedule.")
+                result = declare_holiday([course], holiday_form.cleaned_data["date"], holiday_form.cleaned_data["name"])[course]
+                messages.success(request, "Holiday added; classes that day are cancelled and the plan shifted forward.")
+                _warn_capacity(request, course, result)
                 return redirect("timetable", course.pk)
+        elif action == "supplementary":
+            supp_form = SupplementaryForm(request.POST, prefix="supp")
+            if supp_form.is_valid():
+                cd = supp_form.cleaned_data
+                add_supplementary_day([course], cd["date"], cd["follows_weekday"], cd["reason"])
+                messages.success(request, f"Supplementary teaching day added on {cd['date']:%a %d %b}.")
+                return redirect("timetable", course.pk)
+        elif action == "delete_supplementary":
+            SupplementaryDay.objects.filter(course=course, pk=request.POST.get("id")).delete()
+            sync_timetable(course)
+            return redirect("timetable", course.pk)
         elif action == "dates":
             dates_form = DatesForm(request.POST, prefix="dates")
             if dates_form.is_valid():
@@ -106,7 +141,12 @@ def timetable(request, course):
             messages.success(request, "Slot removed. Sync to update the calendar.")
             return redirect("timetable", course.pk)
         elif action == "delete_holiday":
-            Holiday.objects.filter(course=course, pk=request.POST.get("id")).delete()
+            holiday = Holiday.objects.filter(course=course, pk=request.POST.get("id")).first()
+            if holiday:
+                course.sessions.filter(date=holiday.date, status=ClassSession.CANCELLED,
+                                       cancel_reason__startswith="Holiday").update(status=ClassSession.SCHEDULED, cancel_reason="")
+                holiday.delete()
+                sync_timetable(course)
             return redirect("timetable", course.pk)
     slots = course.slots.all()
     weekly = {
@@ -117,7 +157,8 @@ def timetable(request, course):
     plan_counts = {t: course.plan_items.filter(session_type=t).count() for t in ("lecture", "tutorial", "lab")}
     return render(request, "delivery/timetable.html", {
         "course": course, "tab": "timetable", "slots": slots, "holidays": course.holidays.all(),
-        "slot_form": slot_form, "holiday_form": holiday_form, "dates_form": dates_form,
+        "slot_form": slot_form, "holiday_form": holiday_form, "dates_form": dates_form, "supp_form": supp_form,
+        "supplementary": course.supplementary_days.all(), "capacity": capacity(course),
         "weekly": weekly, "plan_counts": plan_counts, "session_count": course.sessions.count(),
     })
 
@@ -164,13 +205,25 @@ def session_detail(request, course, session_id):
         action = request.POST.get("action", "save")
         if action == "cancel":
             session.status = ClassSession.CANCELLED
-            session.save(update_fields=["status"])
+            session.cancel_reason = (request.POST.get("reason") or "Not held")[:160]
+            session.save(update_fields=["status", "cancel_reason"])
             sync_timetable(course)
             messages.success(request, "Session cancelled; the plan shifted to the next available slot.")
             return redirect("session_detail", course.pk, session.pk)
+        if action == "reschedule":
+            rform = RescheduleForm(request.POST, prefix="rs")
+            if rform.is_valid():
+                cd = rform.cleaned_data
+                new = reschedule_session(session, cd["date"], cd["start_time"], cd["end_time"], cd["room"])
+                messages.success(request, f"Class moved to {new.date:%a %d %b} {new.start_time:%H:%M}.")
+                return redirect("session_detail", course.pk, new.pk)
+            messages.error(request, "Enter a valid new date and time.")
+            return redirect("session_detail", course.pk, session.pk)
         if action == "reopen":
             session.status = ClassSession.SCHEDULED
-            session.save(update_fields=["status"])
+            session.cancel_reason = ""
+            session.save(update_fields=["status", "cancel_reason"])
+            sync_timetable(course)
             return redirect("session_detail", course.pk, session.pk)
         if action == "checkin":
             session.checkin_open = not session.checkin_open
@@ -201,6 +254,7 @@ def session_detail(request, course, session_id):
     return render(request, "delivery/session_detail.html", {
         "course": course, "tab": "sessions", "session": session, "form": form, "roster": roster,
         "present": present, "has_records": bool(records),
+        "reschedule_form": RescheduleForm(prefix="rs", initial={"start_time": session.start_time, "end_time": session.end_time, "room": session.room}),
         "prev": course.sessions.filter(date__lt=session.date).order_by("-date", "-start_time").first(),
         "next": course.sessions.filter(date__gt=session.date).order_by("date", "start_time").first(),
     })
@@ -215,7 +269,9 @@ def session_add(request, course):
         session = form.save(commit=False)
         session.course = course
         session.is_extra = True
+        session.plan_pinned = bool(session.plan_item)
         session.save()
+        sync_timetable(course)
         messages.success(request, "Extra session added.")
         return redirect("session_detail", course.pk, session.pk)
     return render(request, "delivery/session_add.html", {"course": course, "tab": "sessions", "form": form})
@@ -224,8 +280,6 @@ def session_add(request, course):
 @login_required
 @require_POST
 def student_checkin(request, course_id):
-    from courses.models import Course
-
     course = get_object_or_404(Course, pk=course_id, enrollments__student=request.user)
     code = (request.POST.get("code") or "").strip()
     session = course.sessions.filter(checkin_open=True, checkin_code=code, date=timezone.localdate()).first()
@@ -260,3 +314,106 @@ def attendance_report(request, course):
     return render(request, "delivery/attendance_report.html", {
         "course": course, "tab": "attendance", "sessions": sessions, "rows": rows,
     })
+
+
+def _teacher_courses(request):
+    user = request.user
+    qs = Course.objects.filter(teacher=user) | Course.objects.filter(co_teachers=user)
+    if user.is_superuser:
+        qs = Course.objects.all()
+    return in_term(qs.distinct(), current_term(request)).filter(archived=False)
+
+
+@teacher_required
+def pending_attendance(request):
+    """All classes (today and earlier) whose attendance hasn't been marked, across the teacher's courses."""
+    courses = list(_teacher_courses(request))
+    today = timezone.localdate()
+    if request.method == "POST":
+        ids = request.POST.getlist("selected") or [request.POST.get("session")]
+        sessions = ClassSession.objects.filter(pk__in=[i for i in ids if i], course__in=courses, status=ClassSession.SCHEDULED)
+        touched = set()
+        removed = 0
+        for session in sessions:
+            touched.add(session.course)
+            if session.is_extra:
+                session.delete()  # manually added: really remove it
+            else:
+                session.status = ClassSession.CANCELLED  # timetable class that did not happen
+                session.save(update_fields=["status"])
+            removed += 1
+        for course in touched:
+            sync_timetable(course)
+        messages.success(request, f"Deleted {removed} class{'es' if removed != 1 else ''}; the learning plan moved to the next available slots.")
+        return redirect("pending_attendance")
+    pending = (ClassSession.objects.filter(course__in=courses, date__lte=today, status=ClassSession.SCHEDULED)
+               .filter(attendance__isnull=True).select_related("course", "plan_item").order_by("date", "start_time").distinct())
+    course_filter = request.GET.get("course")
+    summary = []
+    for c in courses:
+        marked = c.sessions.filter(status=ClassSession.COMPLETED).count()
+        waiting = sum(1 for p in pending if p.course_id == c.pk)
+        summary.append({"course": c, "marked": marked, "pending": waiting})
+    if course_filter:
+        pending = [p for p in pending if str(p.course_id) == course_filter]
+    return render(request, "delivery/pending_attendance.html", {
+        "summary": summary, "pending": pending, "course_filter": course_filter,
+        "total_marked": sum(r["marked"] for r in summary), "total_pending": sum(r["pending"] for r in summary),
+    })
+
+
+def _warn_capacity(request, course, result):
+    cap = capacity(course)
+    if cap["shortfall"]:
+        messages.warning(request, f"{course.code}: {cap['shortfall']} plan session(s) no longer fit before the end date - "
+                                  "add supplementary teaching days or extra classes.")
+
+
+class ScheduleChangeForm(forms.Form):
+    KIND = [("holiday", "Sudden holiday / no classes"), ("supplementary", "Supplementary teaching day")]
+    kind = forms.ChoiceField(choices=KIND, widget=forms.RadioSelect, initial="holiday")
+    date = forms.DateField(widget=DATE)
+    name = forms.CharField(required=False, label="Reason", help_text="e.g. Heavy rain, Institute event, compensation for 15 Aug")
+    follows_weekday = forms.TypedChoiceField(choices=WEEKDAYS, coerce=int, required=False,
+                                             label="Supplementary day follows the timetable of")
+    courses = forms.ModelMultipleChoiceField(queryset=Course.objects.none(), widget=forms.CheckboxSelectMultiple,
+                                             required=False, help_text="Leave all ticked to apply to every class you teach")
+    whole_institution = forms.BooleanField(required=False, label="Apply to all courses in this term (administrators)")
+
+
+@teacher_required
+def schedule_changes(request):
+    """Declare a sudden holiday or a supplementary teaching day across classes in one go."""
+    courses = _teacher_courses(request)
+    form = ScheduleChangeForm(request.POST or None, initial={"courses": courses})
+    form.fields["courses"].queryset = courses
+    if not request.user.is_staff:
+        del form.fields["whole_institution"]
+    if request.method == "POST" and form.is_valid():
+        cd = form.cleaned_data
+        targets = list(cd["courses"]) or list(courses)
+        if cd.get("whole_institution"):
+            targets = list(in_term(Course.objects.filter(archived=False), current_term(request)))
+        if cd["kind"] == "holiday":
+            results = declare_holiday(targets, cd["date"], cd["name"] or "Holiday")
+            messages.success(request, f"{cd['date']:%a %d %b} declared a holiday for {len(targets)} course(s); plans shifted forward.")
+            for course, result in results.items():
+                _warn_capacity(request, course, result)
+        else:
+            if cd.get("follows_weekday") is None:
+                form.add_error("follows_weekday", "Pick which weekday's timetable to follow.")
+                return render(request, "delivery/schedule_changes.html", _schedule_ctx(request, form, courses))
+            add_supplementary_day(targets, cd["date"], cd["follows_weekday"], cd["name"])
+            messages.success(request, f"Supplementary teaching day on {cd['date']:%a %d %b} added for {len(targets)} course(s).")
+        return redirect("schedule_changes")
+    return render(request, "delivery/schedule_changes.html", _schedule_ctx(request, form, courses))
+
+
+def _schedule_ctx(request, form, courses):
+    rows = []
+    for c in courses:
+        rows.append({"course": c, "capacity": capacity(c), "holidays": list(c.holidays.all()),
+                     "supplementary": list(c.supplementary_days.all())})
+    cancelled = (ClassSession.objects.filter(course__in=courses, status=ClassSession.CANCELLED)
+                 .select_related("course").order_by("-date")[:30])
+    return {"form": form, "rows": rows, "cancelled": cancelled}

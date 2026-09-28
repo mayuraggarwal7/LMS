@@ -2,7 +2,7 @@ from django import forms
 
 from accounts.models import YEAR_CHOICES
 
-from .models import Course, CourseOutcome, PlanItem, Rubric
+from .models import AcademicTerm, Course, CourseOutcome, PlanItem, Rubric
 
 DATE = forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d")
 
@@ -56,6 +56,8 @@ class CourseReviewForm(forms.Form):
     experiments_text = forms.CharField(label="Lab experiments", required=False, widget=forms.Textarea(attrs={"rows": 5}),
                                        help_text="One experiment per line")
     opt_plan = forms.BooleanField(required=False, initial=True, label="Learning plan (session-by-session)")
+    opt_lesson_plan = forms.BooleanField(required=False, initial=True,
+                                         label="Follow my uploaded lesson plan (its order, COs and lecture counts)")
     opt_scheme = forms.BooleanField(required=False, initial=True, label="Assessment scheme (ISE / MSE / ESE)")
     opt_rubrics = forms.BooleanField(required=False, initial=True, label="Rubric library")
     opt_questions = forms.BooleanField(required=False, initial=True, label="Question bank")
@@ -66,7 +68,7 @@ class CourseReviewForm(forms.Form):
 class CourseSettingsForm(forms.ModelForm):
     class Meta:
         model = Course
-        fields = ["code", "title", "department", "year", "semester", "division", "academic_year", "credits",
+        fields = ["term", "code", "title", "department", "year", "semester", "division", "academic_year", "credits",
                   "lecture_hours", "tutorial_hours", "practical_hours", "start_date", "end_date", "description",
                   "prerequisites", "archived"]
         widgets = {"start_date": DATE, "end_date": DATE, "description": forms.Textarea(attrs={"rows": 3}),
@@ -113,6 +115,18 @@ class RubricMetaForm(forms.ModelForm):
 
 class AddStudentsForm(forms.Form):
     rows = forms.CharField(
-        widget=forms.Textarea(attrs={"rows": 6, "class": "mono", "placeholder": "roll_no, full name, email\n22CE001, Asha Patil, asha@college.edu"}),
-        help_text="One student per line: roll number, name, email (existing usernames/emails are linked, new ones get an account).",
+        widget=forms.Textarea(attrs={"rows": 6, "class": "mono", "placeholder": "roll_no, full name, email, PRN\n9652, Asha Patil, asha@college.edu, 2021016402325982"}),
+        help_text="One student per line: roll number, name, email, PRN (email and PRN optional). Existing students are linked, new ones get an account.",
     )
+
+
+class TermForm(forms.ModelForm):
+    class Meta:
+        model = AcademicTerm
+        fields = ["name", "kind", "academic_year", "start_date", "end_date", "is_active"]
+        widgets = {"start_date": DATE, "end_date": DATE}
+
+
+class LessonPlanUploadForm(forms.Form):
+    file = forms.FileField(help_text="Your existing lesson plan (.doc, .docx, .pdf or .txt) with a Proposed date / Topics / CO table")
+    keep_units = forms.BooleanField(required=False, initial=True, label="Keep the current units (map rows by module number)")

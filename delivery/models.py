@@ -37,6 +37,22 @@ class Holiday(models.Model):
         return f"{self.date} {self.name}"
 
 
+class SupplementaryDay(models.Model):
+    """An extra teaching day that follows another weekday's timetable (e.g. Saturday runs Monday's classes)."""
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="supplementary_days")
+    date = models.DateField()
+    follows_weekday = models.PositiveSmallIntegerField("Follow the timetable of", choices=WEEKDAYS)
+    reason = models.CharField(max_length=120, blank=True, help_text="e.g. compensation for the 15 Aug holiday")
+
+    class Meta:
+        ordering = ["date"]
+        unique_together = [("course", "date")]
+
+    def __str__(self):
+        return f"{self.date} follows {self.get_follows_weekday_display()}"
+
+
 def generate_checkin_code():
     return f"{random.randint(0, 999999):06d}"
 
@@ -64,6 +80,8 @@ class ClassSession(models.Model):
     notes_shared = models.BooleanField("Share notes with students", default=True)
     checkin_code = models.CharField(max_length=6, default=generate_checkin_code)
     checkin_open = models.BooleanField(default=False)
+    plan_pinned = models.BooleanField(default=False, help_text="Plan item chosen by hand; timetable sync keeps it")
+    cancel_reason = models.CharField(max_length=160, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
@@ -74,8 +92,13 @@ class ClassSession(models.Model):
 
     @property
     def is_locked(self):
-        """A session that sync must never delete or re-map."""
+        """A session that sync must never delete (delivered, cancelled, added by hand, or already has notes/attendance)."""
         return self.status != self.SCHEDULED or self.is_extra or bool(self.notes) or self.attendance.exists()
+
+    @property
+    def keeps_plan_item(self):
+        """A scheduled session whose plan item sync must not change."""
+        return self.plan_pinned or bool(self.notes) or self.attendance.exists()
 
 
 class AttendanceRecord(models.Model):

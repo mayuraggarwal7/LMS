@@ -70,6 +70,14 @@ class Question(models.Model):
 class Exam(models.Model):
     DRAFT, PUBLISHED, MARKED = "draft", "published", "marked"
     STATUS_CHOICES = [(DRAFT, "Draft"), (PUBLISHED, "Scheduled"), (MARKED, "Marks released")]
+    REGULAR, REEXAM, ADDITIONAL = "regular", "reexam", "additional"
+    PURPOSE_CHOICES = [
+        (REGULAR, "Regular assessment"),
+        (REEXAM, "Re-exam (for failed / absent students)"),
+        (ADDITIONAL, "Additional / make-up assessment"),
+    ]
+    REPLACE, BEST = "replace", "best"
+    POLICY_CHOICES = [(REPLACE, "Replaces the original score"), (BEST, "Better of original and new score")]
 
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="exams")
     component = models.ForeignKey(AssessmentComponent, on_delete=models.SET_NULL, null=True, blank=True, related_name="exams")
@@ -82,6 +90,16 @@ class Exam(models.Model):
         blank=True, default="1. All questions are compulsory unless stated otherwise.\n2. Figures to the right indicate full marks.\n3. Assume suitable data wherever necessary."
     )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=DRAFT)
+    purpose = models.CharField(max_length=10, choices=PURPOSE_CHOICES, default=REGULAR)
+    policy = models.CharField(max_length=10, choices=POLICY_CHOICES, default=REPLACE)
+    replaces_exam = models.ForeignKey("self", on_delete=models.CASCADE, null=True, blank=True, related_name="retakes",
+                                      help_text="The exam this re-exam / make-up stands in for")
+    replaces_assignment = models.ForeignKey("classroom.Assignment", on_delete=models.CASCADE, null=True, blank=True,
+                                            related_name="retakes", help_text="The assignment this make-up stands in for")
+    candidates = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="retake_exams",
+                                        help_text="Students registered for this re-exam / additional assessment")
+    term = models.ForeignKey("courses.AcademicTerm", on_delete=models.SET_NULL, null=True, blank=True,
+                             help_text="e.g. the re-exam term it is conducted in")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -89,6 +107,14 @@ class Exam(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_retake(self):
+        return self.purpose != self.REGULAR
+
+    @property
+    def original(self):
+        return self.replaces_exam or self.replaces_assignment
 
     @property
     def paper_total(self):

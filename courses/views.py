@@ -6,6 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.db import transaction
 from django.db.models import F
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -19,9 +20,11 @@ from delivery.services import attendance_stats, plan_progress, sync_timetable
 from . import syllabus as syl
 from .access import course_member, course_teacher, teacher_required
 from .ai import ai_parse_syllabus
-from .forms import (AddStudentsForm, CourseReviewForm, CourseSettingsForm, OutcomeFormSet, PlanItemForm,
-                    RubricMetaForm, SyllabusUploadForm)
-from .models import Course, Enrollment, PlanItem, Rubric, RubricCriterion, Topic
+from .forms import (AddStudentsForm, CourseReviewForm, CourseSettingsForm, LessonPlanUploadForm, OutcomeFormSet,
+                    PlanItemForm, RubricMetaForm, SyllabusUploadForm, TermForm)
+from .lessonplan import apply_lesson_plan, build_docx, derive_units, lecture_count, lesson_plan_rows, parse_lesson_plan
+from .models import AcademicTerm, Course, Enrollment, PlanItem, Rubric, RubricCriterion, Topic
+from .terms import SESSION_KEY, current_term
 from .planner import generate_learning_plan, renumber
 from .rubrics import TEMPLATES, create_rubric_from_template, ensure_default_levels
 from .setup import build_course
@@ -53,10 +56,16 @@ def course_new(request):
             used_ai = data is not None
         if data is None:
             data = syl.parse_syllabus(text)
+        lesson_plan = parse_lesson_plan(text)
+        if lesson_plan and not data.get("units"):
+            data["units"] = derive_units(lesson_plan)
         info = {k: form.cleaned_data[k] for k in ("year", "semester", "department", "division", "academic_year")}
+        if not info["department"]:
+            info["department"] = syl.guess_department(text)
         for k in ("start_date", "end_date"):
             info[k] = form.cleaned_data[k].isoformat() if form.cleaned_data[k] else ""
-        request.session[DRAFT_KEY] = {"data": data, "info": info, "text": text, "file": file_path, "ai": used_ai}
+        request.session[DRAFT_KEY] = {"data": data, "info": info, "text": text, "file": file_path, "ai": used_ai,
+                                      "lesson_plan": lesson_plan}
         return redirect("course_review")
     return render(request, "courses/course_new.html", {"form": form})
 
@@ -86,7 +95,8 @@ def course_review(request):
                 course_info["syllabus_text"] = draft.get("text", "")
                 course_info["syllabus_file"] = draft.get("file", "")
                 options = {k[4:]: cd[k] for k in cd if k.startswith("opt_")}
-                course, summary = build_course(request.user, parsed, course_info, options)
+                course_info["term"] = current_term(request)
+                course, summary = build_course(request.user, parsed, course_info, options, lesson_plan=draft.get("lesson_plan"))
                 request.session.pop(DRAFT_KEY, None)
                 request.session[f"setup_summary_{course.pk}"] = {k: v for k, v in summary.items()}
                 messages.success(request, f"{course.code} is ready. Review the generated plan, then add your timetable.")
@@ -109,7 +119,14 @@ def course_review(request):
         "topics": sum(len(u.get("topics", [])) for u in data.get("units", [])),
         "hours": sum((u.get("hours") or 0) for u in data.get("units", [])), "experiments": len(data.get("experiments", [])),
     }
-    return render(request, "courses/course_review.html", {"form": form, "stats": stats, "used_ai": draft.get("ai"), "has_draft": bool(data)})
+    lesson_plan = draft.get("lesson_plan")
+    if lesson_plan:
+        stats["lp_rows"] = len(lesson_plan["rows"])
+        stats["lp_lectures"] = sum(lecture_count(r) for r in lesson_plan["rows"])
+        stats["lp_events"] = len(lesson_plan["events"])
+    return render(request, "courses/course_review.html", {
+        "form": form, "stats": stats, "used_ai": draft.get("ai"), "has_draft": bool(data), "lesson_plan": lesson_plan,
+    })
 
 
 @login_required
@@ -444,16 +461,21 @@ def _bulk_add_students(course, text):
         roll = parts[0]
         name = parts[1] if len(parts) > 1 else ""
         email = parts[2] if len(parts) > 2 else ""
+        prn = parts[3] if len(parts) > 3 else ""
         user = (User.objects.filter(username__iexact=roll).first() or User.objects.filter(roll_no__iexact=roll).first()
+                or (User.objects.filter(prn=prn).first() if prn else None)
                 or (User.objects.filter(email__iexact=email).first() if email else None))
         if user is None:
             first, _, last = name.partition(" ")
             password = secrets.token_urlsafe(6)
             user = User.objects.create_user(
                 username=roll.lower().replace(" ", ""), email=email, password=password, first_name=first, last_name=last,
-                role=User.STUDENT, roll_no=roll, year_of_study=course.year, department=course.department,
+                role=User.STUDENT, roll_no=roll, prn=prn, year_of_study=course.year, department=course.department,
             )
             created.append({"username": user.username, "password": password, "name": name})
+        if prn and not user.prn:
+            user.prn = prn
+            user.save(update_fields=["prn"])
         _, was_created = Enrollment.objects.get_or_create(course=course, student=user)
         added += int(was_created)
     return added, created
@@ -465,3 +487,70 @@ def remove_student(request, course, user_id):
     Enrollment.objects.filter(course=course, student_id=user_id).delete()
     messages.success(request, "Student removed from the class.")
     return redirect("course_people", course.pk)
+
+
+# --- lesson plan import / export ----------------------------------------------------------
+
+@course_teacher
+def plan_import(request, course):
+    form = LessonPlanUploadForm(request.POST or None, request.FILES or None)
+    if request.method == "POST" and form.is_valid():
+        try:
+            text = syl.extract_text(form.cleaned_data["file"])
+        except Exception:
+            text = ""
+        lesson_plan = parse_lesson_plan(text)
+        if not lesson_plan:
+            messages.error(request, "No lesson plan table found. It needs a header row with 'Proposed Date' and 'Topics' columns.")
+        else:
+            with transaction.atomic():
+                if not form.cleaned_data["keep_units"]:
+                    course.units.all().delete()
+                count = apply_lesson_plan(course, lesson_plan)
+                result = sync_timetable(course)
+            messages.success(request, f"Imported {count} sessions from {len(lesson_plan['rows'])} lesson plan rows"
+                                      + ("" if result["errors"] else f"; {result['mapped']} mapped onto the timetable") + ".")
+            return redirect("course_plan", course.pk)
+    return render(request, "courses/plan_import.html", {"course": course, "tab": "plan", "form": form})
+
+
+@course_member
+def lesson_plan_document(request, course):
+    """The plan in the institutional 'Course Lesson Plan' format (print view or .docx)."""
+    if request.GET.get("format") == "docx":
+        response = HttpResponse(
+            build_docx(course), content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+        response["Content-Disposition"] = f'attachment; filename="Lesson_Plan_{course.code}.docx"'
+        return response
+    return render(request, "courses/lesson_plan_document.html", {
+        "course": course, "rows": lesson_plan_rows(course), "outcomes": course.outcomes.all(),
+        "references": course.references.all(),
+    })
+
+
+# --- academic terms --------------------------------------------------------------------------
+
+@login_required
+def term_switch(request):
+    if request.method == "POST":
+        if "create" in request.POST and request.user.is_staff:
+            form = TermForm(request.POST)
+            if form.is_valid():
+                term = form.save()
+                messages.success(request, f"Created {term}.")
+            else:
+                messages.error(request, "Could not create the term - check the fields.")
+            return redirect("term_switch")
+        term = get_object_or_404(AcademicTerm, pk=request.POST.get("term"))
+        request.session[SESSION_KEY] = term.pk
+        messages.success(request, f"Switched to {term}.")
+        return redirect(request.POST.get("next") or "dashboard")
+    kind = request.GET.get("kind", "")
+    terms = AcademicTerm.objects.all()
+    if kind:
+        terms = terms.filter(kind=kind)
+    return render(request, "courses/terms.html", {
+        "terms": terms, "kind": kind, "kinds": AcademicTerm.KIND_CHOICES, "selected": current_term(request),
+        "form": TermForm() if request.user.is_staff else None,
+    })

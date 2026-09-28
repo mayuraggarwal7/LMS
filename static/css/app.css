@@ -166,3 +166,28 @@ details summary { cursor: pointer; font-weight: 500; }
   .container { padding: 0; }
   .card { box-shadow: none; border: none; padding: 0; }
 }
+
+/* terms */
+.term-chip { display: inline-flex; align-items: center; gap: .35rem; padding: .25rem .6rem; border: 1px solid var(--border); border-radius: 99px; color: var(--text); font-size: .88rem; }
+.term-chip:hover { text-decoration: none; border-color: var(--primary); }
+.term-badge { display: inline-grid; place-items: center; min-width: 1.5rem; height: 1.5rem; padding: 0 .25rem; border-radius: 99px; color: #fff; font-size: .72rem; font-weight: 700; }
+.term-odd { background: #1f8a3b; } .term-even { background: #b3261e; } .term-reexam { background: #1d5a8c; } .term-special { background: #8e1f6b; }
+.term-list { display: grid; gap: .6rem; }
+.term-row { display: flex; align-items: center; gap: .8rem; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); }
+.term-row.selected { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-soft); }
+.term-row .term-badge { width: 2.2rem; height: 2.2rem; font-size: .85rem; }
+.chips { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0 1rem; }
+.chips a { padding: .3rem .8rem; border: 1px solid var(--border); border-radius: 99px; color: var(--text); font-size: .88rem; display: inline-flex; gap: .35rem; align-items: center; }
+.chips a.active { border-color: var(--primary); background: var(--primary-soft); color: var(--primary); }
+.chips a:hover { text-decoration: none; }
+
+/* pending attendance & CIE report */
+.date-chip { display: inline-block; text-align: center; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; min-width: 7rem; font-size: .8rem; }
+.date-chip .t { background: #e0474c; color: #fff; padding: .1rem .4rem; font-weight: 600; }
+.date-chip .d { padding: .1rem .4rem; background: var(--surface-2); }
+.ne { color: var(--muted); font-weight: 600; }
+table.cie th.comp { background: #8a8f99; color: #fff; text-transform: none; font-size: .85rem; }
+table.cie th.item { background: #e05a5f; color: #fff; text-transform: none; }
+table.cie th.bucket { background: #7fcfcc; color: #123; text-transform: none; }
+table.cie td.bucket { background: var(--surface-2); font-weight: 600; }
+@media (prefers-color-scheme: dark) { table.cie th.bucket { color: #042; } }

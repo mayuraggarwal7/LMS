@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-head">
   <div><h1>Good day, {{ user.first_name|default:user.username }} 👋</h1>
-    <p class="sub">{% now "l, j F Y" %} · {{ todays|length }} class{{ todays|length|pluralize:"es" }} today{% if pending_notes %} · <a href="#pending">{{ pending_notes }} past session{{ pending_notes|pluralize }} awaiting notes/attendance</a>{% endif %}</p>
+    <p class="sub">{% now "l, j F Y" %} · {{ todays|length }} class{{ todays|length|pluralize:"es" }} today{% if pending_notes %} · <a href="{% url 'pending_attendance' %}">{{ pending_notes }} pending attendance</a>{% endif %}</p>
   </div>
   <a class="btn primary big" href="{% url 'course_new' %}">+ New course from syllabus</a>
 </div>
@@ -38,7 +38,7 @@
         {% if c.progress.behind %}<li>⏱ <a href="{% url 'session_list' c.course.pk %}?show=pending">{{ c.course.code }} is {{ c.progress.behind }} session{{ c.progress.behind|pluralize }} behind plan</a></li>{% endif %}
         {% if c.at_risk %}<li>⚠️ <a href="{% url 'attendance_report' c.course.pk %}">{{ c.at_risk }} student{{ c.at_risk|pluralize }} below attendance threshold in {{ c.course.code }}</a></li>{% endif %}
       {% endfor %}
-      {% if pending_notes %}<li>🗒 {{ pending_notes }} past session{{ pending_notes|pluralize }} not yet marked delivered</li>{% endif %}
+      {% if pending_notes %}<li>🗒 <a href="{% url 'pending_attendance' %}">{{ pending_notes }} class{{ pending_notes|pluralize:"es" }} with pending attendance</a></li>{% endif %}
     </ul>
   </div>
 </div>

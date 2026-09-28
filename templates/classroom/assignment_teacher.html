@@ -12,6 +12,7 @@
     <form method="post" action="{% url 'assignment_status' course.pk a.pk %}" class="inline">{% csrf_token %}
       {% if a.is_published %}<button name="action" value="unpublish" class="btn ghost">Unpublish</button>{% else %}<button name="action" value="publish" class="btn primary">Publish</button>{% endif %}
       <button name="action" value="delete" class="btn danger" data-confirm="Delete this assignment and all submissions?">Delete</button>
+      <a class="btn" href="{% url 'retake_new' course.pk %}?assignment={{ a.pk }}&purpose=additional">Make-up assessment</a>
     </form>
   </div>
 </div>

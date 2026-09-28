@@ -13,5 +13,6 @@ urlpatterns = [
     path("assignments/<int:assignment_id>/return-all/", views.return_all, name="return_all"),
     path("assignments/<int:assignment_id>/grade/<int:student_id>/", views.grade_submission, name="grade_submission"),
     path("gradebook/", views.gradebook, name="gradebook"),
+    path("cie-report/", views.cie_report, name="cie_report"),
     path("my-grades/", views.my_grades, name="my_grades"),
 ]

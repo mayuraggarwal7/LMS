@@ -6,6 +6,7 @@ from decimal import Decimal, InvalidOperation
 from django import forms
 from django.contrib import messages
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from courses.access import course_member, course_teacher
@@ -89,7 +90,7 @@ def scheme(request, course):
 def exam_list(request, course):
     exams = course.exams.select_related("component").prefetch_related("units")
     if not request.is_course_teacher:
-        exams = exams.exclude(status=Exam.DRAFT)
+        exams = exams.exclude(status=Exam.DRAFT).exclude(~Q(purpose=Exam.REGULAR) & ~Q(candidates=request.user)).distinct()
     rows = [{"exam": e, "summary": analytics.marks_summary(e) if request.is_course_teacher else None} for e in exams]
     return render(request, "exams/exam_list.html", {
         "course": course, "tab": "exams", "rows": rows, "components": course.components.all(),
@@ -118,6 +119,8 @@ def exam_new(request, course):
 def exam_detail(request, course, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id, course=course)
     if not request.is_course_teacher:
+        if exam.is_retake and not exam.candidates.filter(pk=request.user.pk).exists():
+            return redirect("exam_list", course.pk)
         return _student_exam(request, course, exam)
     if request.method == "POST":
         action = request.POST.get("action")
@@ -192,7 +195,7 @@ def exam_print(request, course, exam_id):
 def exam_marks(request, course, exam_id):
     exam = get_object_or_404(Exam, pk=exam_id, course=course)
     paper = list(exam.paper.all())
-    students = list(course.students)
+    students = list(exam.candidates.all()) if exam.is_retake else list(course.students)
     if request.method == "POST":
         if request.FILES.get("file"):
             count = _import_marks(exam, paper, students, request.FILES["file"])
@@ -319,3 +322,65 @@ def co_attainment(request, course):
     report = analytics.co_attainment(course)
     return render(request, "exams/co_attainment.html", {"course": course, "tab": "attainment", "report": report})
 
+
+
+class RetakeForm(forms.Form):
+    purpose = forms.ChoiceField(choices=[c for c in Exam.PURPOSE_CHOICES if c[0] != Exam.REGULAR], widget=forms.RadioSelect)
+    policy = forms.ChoiceField(choices=Exam.POLICY_CHOICES, widget=forms.RadioSelect)
+    title = forms.CharField(max_length=200)
+    date = forms.DateField(required=False, widget=DATE)
+    duration_minutes = forms.IntegerField(min_value=10)
+    total_marks = forms.DecimalField(min_value=2)
+    term = forms.ModelChoiceField(queryset=None, required=False, help_text="Term it is conducted in (e.g. the re-exam term)")
+    candidates = forms.ModelMultipleChoiceField(queryset=None, widget=forms.CheckboxSelectMultiple, required=False)
+
+    def __init__(self, *args, course=None, **kwargs):
+        from courses.models import AcademicTerm
+
+        super().__init__(*args, **kwargs)
+        self.fields["term"].queryset = AcademicTerm.objects.all()
+        self.fields["candidates"].queryset = course.students
+        self.fields["candidates"].label_from_instance = lambda u: str(u)
+
+    def clean_candidates(self):
+        if not self.cleaned_data["candidates"]:
+            raise forms.ValidationError("Select at least one student.")
+        return self.cleaned_data["candidates"]
+
+
+@course_teacher
+def retake_new(request, course):
+    """Create a re-exam or an additional / make-up assessment for an exam or an assignment."""
+    from classroom.models import Assignment
+
+    from courses.models import AcademicTerm
+
+    if request.GET.get("assignment") or request.POST.get("assignment"):
+        original = get_object_or_404(Assignment, pk=request.GET.get("assignment") or request.POST.get("assignment"), course=course)
+    else:
+        original = get_object_or_404(Exam, pk=request.GET.get("exam") or request.POST.get("exam"), course=course, purpose=Exam.REGULAR)
+    is_assignment = isinstance(original, Assignment)
+    purpose = request.GET.get("purpose") or (Exam.ADDITIONAL if is_assignment or (original.component and original.component.is_internal) else Exam.REEXAM)
+    suggested = services.retake_candidates(original, purpose)
+    reexam_term = AcademicTerm.objects.filter(kind=AcademicTerm.REEXAM).first() if purpose == Exam.REEXAM else None
+    initial = {
+        "purpose": purpose, "policy": Exam.REPLACE if purpose == Exam.REEXAM else Exam.BEST,
+        "title": f"{'Re-exam' if purpose == Exam.REEXAM else 'Additional assessment'}: {original.title}",
+        "duration_minutes": 60 if is_assignment else original.duration_minutes,
+        "total_marks": original.max_points if is_assignment else original.total_marks,
+        "candidates": suggested, "term": reexam_term,
+    }
+    form = RetakeForm(request.POST or None, course=course, initial=initial)
+    if request.method == "POST" and form.is_valid():
+        cd = form.cleaned_data
+        exam, warnings = services.create_retake(original, cd["purpose"], cd["policy"], cd["candidates"], cd["title"],
+                                                cd["date"], cd["total_marks"], cd["term"], cd["duration_minutes"])
+        for w in warnings:
+            messages.warning(request, w)
+        messages.success(request, f"{exam.get_purpose_display().split(' (')[0]} created for {exam.candidates.count()} student(s) "
+                                  "with a fresh paper. Enter marks after it is held - the gradebook updates automatically.")
+        return redirect("exam_detail", course.pk, exam.pk)
+    return render(request, "exams/retake_new.html", {
+        "course": course, "tab": "exams", "form": form, "original": original, "is_assignment": is_assignment,
+        "suggested": suggested,
+    })

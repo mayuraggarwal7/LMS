@@ -32,7 +32,7 @@ UNIT_RE = re.compile(
 CO_RE = re.compile(r"^\s*(?:[-•*]\s*)?(?P<code>C\.?O\.?\s*-?\s*\d{1,2})\s*[:.\-–—)]*\s*(?P<text>.+)$", re.IGNORECASE)
 HOURS_RE = re.compile(r"[\(\[]?\s*(\d{1,2})\s*(?:hours|hrs|hr|h|lectures|lecs|l)\b\.?\s*[\)\]]?", re.IGNORECASE)
 TRAILING_NUM_RE = re.compile(r"\s+(\d{1,2})\s*$")
-NUMBERED_RE = re.compile(r"^\s*(?:\[?\d{1,2}[\].)]|[-•*]|[a-z][.)])\s*(.+)$", re.IGNORECASE)
+NUMBERED_RE = re.compile(r"^\s*(?:\[?\d{1,2}[\].)]\s*|[-•*]\s*|(?-i:[a-hA-H])[.)]\s+(?![A-Z]\.))(.+)$", re.IGNORECASE)
 
 SECTION_PATTERNS = {
     "outcomes": re.compile(r"^\s*(course\s+outcomes?|learning\s+outcomes?|cos?\b|outcomes?)\s*[:\-]?", re.I),
@@ -44,6 +44,8 @@ SECTION_PATTERNS = {
     "assessment": re.compile(r"^\s*(assessment|evaluation\s+scheme|examination\s+scheme|scheme\s+of\s+evaluation|internal\s+assessment)", re.I),
     "contents": re.compile(r"^\s*(course\s+contents?|syllabus|detailed\s+syllabus|contents)\s*[:\-]?\s*$", re.I),
     "prerequisites": re.compile(r"^\s*(pre-?requisites?)\s*[:\-]?", re.I),
+    "signature": re.compile(r"^\s*(course\s+instructor|prepared\s+by|approved\s+by|signature|hod\b)", re.I),
+    "lessonplan": re.compile(r"^\s*(course\s+)?(lesson|teaching|session)\s+plan\b", re.I),
 }
 
 
@@ -74,12 +76,76 @@ def extract_text(uploaded_file):
                         cells.append(text)
                 lines.append(" | ".join(cells))
         return "\n".join(lines)
+    if name.endswith(".doc") or data[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+        return doc_to_text(data)
     for encoding in ("utf-8", "latin-1"):
         try:
             return data.decode(encoding)
         except UnicodeDecodeError:
             continue
     return ""
+
+
+def _doc_raw_text(data):
+    """Main text of a legacy Word 97-2003 .doc, via the FIB piece table (falls back to a raw decode)."""
+    import struct
+
+    import olefile
+
+    ole = olefile.OleFileIO(io.BytesIO(data))
+    word = ole.openstream("WordDocument").read()
+    try:
+        flags = struct.unpack_from("<H", word, 0x0A)[0]
+        table = ole.openstream("1Table" if flags & 0x0200 else "0Table").read()
+        ccp_text = struct.unpack_from("<i", word, 0x4C)[0]
+        fc_clx, lcb_clx = struct.unpack_from("<II", word, 0x1A2)
+        clx = table[fc_clx: fc_clx + lcb_clx]
+        pos = 0
+        while clx[pos] == 0x01:  # skip Prc (property modifiers)
+            pos += 3 + struct.unpack_from("<H", clx, pos + 1)[0]
+        if clx[pos] != 0x02:
+            raise ValueError("no piece table")
+        lcb = struct.unpack_from("<I", clx, pos + 1)[0]
+        plc = clx[pos + 5: pos + 5 + lcb]
+        n = (lcb - 4) // 12
+        cps = struct.unpack_from(f"<{n + 1}i", plc, 0)
+        chunks = []
+        for i in range(n):
+            fc = struct.unpack_from("<I", plc, 4 * (n + 1) + 8 * i + 2)[0]
+            count = cps[i + 1] - cps[i]
+            if fc & 0x40000000:
+                start = (fc & ~0x40000000) // 2
+                chunks.append(word[start: start + count].decode("cp1252", errors="replace"))
+            else:
+                chunks.append(word[fc: fc + 2 * count].decode("utf-16le", errors="replace"))
+        text = "".join(chunks)[: ccp_text if ccp_text > 0 else None]
+    except Exception:
+        text = word.decode("cp1252", errors="ignore")
+    return text
+
+
+def doc_to_text(data):
+    """Plain text of a .doc where table cells become ' | '-joined lines (like the .docx branch)."""
+    text = _doc_raw_text(data)
+    # drop field instructions: \x13 instruction \x14 result \x15  -> result
+    text = re.sub(r"\x13[^\x13\x14\x15]*\x14", "", text)
+    text = re.sub(r"\x13[^\x13\x14\x15]*\x15", "", text)
+    text = text.replace("\x15", "").replace("\x0b", "\n").replace("\x0c", "\n")
+    lines = []
+    for block in re.split(r"\x07\x07", text):
+        if "\x07" in block:
+            # text before the first cell of a table belongs to normal paragraphs
+            first_cell = block.find("\x07")
+            para_end = block.rfind("\r", 0, first_cell)
+            if para_end != -1:
+                lines += block[:para_end].split("\r")
+                block = block[para_end + 1:]
+            cells = [re.sub(r"\s*\r+\s*", " ", c).strip() for c in block.split("\x07")]
+            lines.append(" | ".join(cells))
+        else:
+            lines += block.split("\r")
+    cleaned = [re.sub(r"[\x00-\x08\x0e-\x1f]", "", l).rstrip() for l in lines]
+    return "\n".join(cleaned)
 
 
 # --- heuristics -----------------------------------------------------------------
@@ -251,7 +317,9 @@ def parse_syllabus(text):
             nm = NUMBERED_RE.match(line)
             if nm:
                 result["outcomes"].append({"code": f"CO{len(result['outcomes']) + 1}", "description": _clean(nm.group(1))})
-            elif result["outcomes"] and not re.search(r"able to|students will|on successful", line, re.I):
+            elif "|" in line:
+                section = None  # a table starts (e.g. the lesson plan) - outcomes are over
+            elif result["outcomes"] and len(line) < 200 and not re.search(r"able to|students will|on successful", line, re.I):
                 result["outcomes"][-1]["description"] += " " + _clean(line)
         elif section == "objectives":
             objective_lines.append(_clean(line))
@@ -295,6 +363,20 @@ def parse_syllabus(text):
         ]
     result["experiments"] = [e for e in result["experiments"] if len(e) > 3]
     return result
+
+
+def guess_department(text):
+    """'Department of Computer Engineering' / a short 'Mechanical Engineering' header line."""
+    for line in (text or "").splitlines()[:15]:
+        line = _clean(line)
+        m = re.search(r"department\s+of\s+(.+)", line, re.I)
+        if m:
+            return m.group(1)[:120]
+        if 5 < len(line) < 60 and re.search(r"engineering|technology|science", line, re.I) and not re.search(
+            r"institute|college|university|course|code|name|:", line, re.I
+        ):
+            return line
+    return ""
 
 
 # --- editable text round-trip ----------------------------------------------------

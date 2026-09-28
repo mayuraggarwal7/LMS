@@ -14,7 +14,7 @@
 <div class="table-wrap"><table>
   <tr><th>Exam</th><th>Component</th><th>Date</th><th>Marks</th><th>Status</th>{% if request.is_course_teacher %}<th>Results</th><th></th>{% endif %}</tr>
   {% for r in rows %}{% with e=r.exam %}<tr>
-    <td><a href="{% url 'exam_detail' course.pk e.pk %}"><strong>{{ e.title }}</strong></a><br><span class="sub">{% for u in e.units.all %}U{{ u.number }} {% endfor %}· {{ e.duration_minutes }} min</span></td>
+    <td><a href="{% url 'exam_detail' course.pk e.pk %}"><strong>{{ e.title }}</strong></a>{% if e.is_retake %} <span class="badge warn">{% if e.purpose == 'reexam' %}Re-exam{% else %}Additional{% endif %} · {{ e.candidates.count }}</span>{% endif %}<br><span class="sub">{% for u in e.units.all %}U{{ u.number }} {% endfor %}· {{ e.duration_minutes }} min</span></td>
     <td>{{ e.component|default:"–" }}</td><td>{{ e.date|date:"D j M Y"|default:"TBD" }}</td><td class="num">{{ e.total_marks|num }}</td>
     <td>{% if e.status == 'marked' %}<span class="badge ok">{{ e.get_status_display }}</span>{% elif e.status == 'published' %}<span class="badge info">{{ e.get_status_display }}</span>{% else %}<span class="badge">Draft</span>{% endif %}</td>
     {% if request.is_course_teacher %}<td>{% if r.summary %}avg {{ r.summary.average|num }} · pass {{ r.summary.pass_rate|pct }}{% else %}<span class="sub">–</span>{% endif %}</td>

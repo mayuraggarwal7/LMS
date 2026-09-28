@@ -4,7 +4,7 @@
   <div>
     <div class="sub">{{ session.date|date:"l j F Y" }} · {{ session.start_time|time:"H:i" }}–{{ session.end_time|time:"H:i" }} · {{ session.get_session_type_display }}{% if session.room %} · {{ session.room }}{% endif %}</div>
     <h2 style="margin:.2rem 0">{{ session.plan_item.title|default:"Buffer / revision session" }}</h2>
-    {% if session.status == 'completed' %}<span class="badge ok">Delivered</span>{% elif session.status == 'cancelled' %}<span class="badge bad">Cancelled</span>{% else %}<span class="badge">Scheduled</span>{% endif %}
+    {% if session.status == 'completed' %}<span class="badge ok">Delivered</span>{% elif session.status == 'cancelled' %}<span class="badge bad">Cancelled{% if session.cancel_reason %} — {{ session.cancel_reason }}{% endif %}</span>{% else %}<span class="badge">Scheduled</span>{% endif %}
   </div>
   <div class="row">
     {% if prev %}<a class="btn small" href="{% url 'session_detail' course.pk prev.pk %}">← Previous</a>{% endif %}
@@ -58,8 +58,18 @@
 <div class="card row" style="margin-top:1rem;position:sticky;bottom:0">
   <button name="action" value="save" class="btn">Save</button>
   {% if session.status != 'completed' %}<button name="action" value="complete" class="btn primary big">✓ Save &amp; mark delivered</button>{% endif %}
-  {% if session.status == 'scheduled' %}<button name="action" value="cancel" class="btn danger" formnovalidate data-confirm="Cancel this class? The plan will shift to the next slot.">Cancel class</button>{% endif %}
+  {% if session.status == 'scheduled' %}<input type="text" name="reason" placeholder="reason (optional)" style="max-width:12rem">
+    <button name="action" value="cancel" class="btn danger" formnovalidate data-confirm="Cancel this class? The plan will shift to the next slot.">Cancel class</button>{% endif %}
   {% if session.status != 'scheduled' %}<button name="action" value="reopen" class="btn ghost" formnovalidate>Reopen</button>{% endif %}
 </div>
 </form>
+{% if session.status == 'scheduled' %}
+<form method="post" class="card" style="margin-top:1rem">{% csrf_token %}
+  <h3>Reschedule this class</h3>
+  <p class="sub">Moves the class (and its planned topic) to another date/time. The original slot is kept as “rescheduled”.</p>
+  {{ reschedule_form.non_field_errors }}
+  <div class="form-grid">{% field reschedule_form.date %}{% field reschedule_form.start_time %}{% field reschedule_form.end_time %}{% field reschedule_form.room %}</div>
+  <button name="action" value="reschedule" class="btn">Move class</button>
+</form>
+{% endif %}
 {% endblock %}

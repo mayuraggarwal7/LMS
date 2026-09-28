@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from classroom.models import Assignment, Submission
 from courses.models import Course
+from courses.terms import current_term, in_term
 from delivery.models import ClassSession
 from delivery.services import attendance_stats, plan_progress
 
@@ -43,7 +44,11 @@ def dashboard(request):
 
 def teacher_dashboard(request):
     user = request.user
-    courses = (Course.objects.filter(teacher=user) | Course.objects.filter(co_teachers=user)).distinct().filter(archived=False)
+    term = current_term(request)
+    mine = (Course.objects.filter(teacher=user) | Course.objects.filter(co_teachers=user)).distinct()
+    courses = in_term(mine, term).filter(archived=False)
+    if term is not None:  # a re-exam term also lists courses that hold re-exams in it
+        courses = (courses | mine.filter(exams__term=term)).distinct()
     today = timezone.localdate()
     cards = []
     for c in courses:
@@ -58,7 +63,7 @@ def teacher_dashboard(request):
         })
     todays = ClassSession.objects.filter(course__in=courses, date=today).select_related("course", "plan_item").order_by("start_time")
     upcoming = ClassSession.objects.filter(course__in=courses, date__gt=today, status=ClassSession.SCHEDULED).select_related("course", "plan_item")[:6]
-    pending_notes = ClassSession.objects.filter(course__in=courses, date__lt=today, status=ClassSession.SCHEDULED).count()
+    pending_notes = ClassSession.objects.filter(course__in=courses, date__lte=today, status=ClassSession.SCHEDULED).count()
     return render(request, "dashboard_teacher.html", {
         "cards": cards, "todays": todays, "upcoming": upcoming, "pending_notes": pending_notes,
     })
@@ -66,7 +71,7 @@ def teacher_dashboard(request):
 
 def student_dashboard(request):
     user = request.user
-    courses = Course.objects.filter(enrollments__student=user, archived=False)
+    courses = in_term(Course.objects.filter(enrollments__student=user, archived=False), current_term(request))
     now = timezone.now()
     submitted = set(
         Submission.objects.filter(student=user, status__in=[Submission.TURNED_IN, Submission.RETURNED]).values_list("assignment_id", flat=True)

@@ -7,6 +7,8 @@
   {% if has_draft %}<p class="sub">Found {{ stats.units }} units, {{ stats.topics }} topics, {{ stats.outcomes }} course outcomes{% if stats.hours %}, {{ stats.hours }} teaching hours{% endif %}{% if stats.experiments %} and {{ stats.experiments }} experiments{% endif %}{% if used_ai %} (AI-assisted){% endif %}. Fix anything that looks off.</p>
   {% else %}<p class="sub">Type your course structure below.</p>{% endif %}</div>
 </div>
+{% if lesson_plan %}<div class="card accent" style="margin-bottom:1rem"><strong>📋 Your lesson plan was found</strong> — {{ stats.lp_rows }} rows, {{ stats.lp_lectures }} lectures{% if stats.lp_events %}, {{ stats.lp_events }} holiday/exam dates{% endif %}.
+  The course plan will follow its order, CO mapping and lecture counts (units were derived from its 1.1 / 2.1 … numbering — rename them below if needed).</div>{% endif %}
 <form method="post">{% csrf_token %}
   {{ form.non_field_errors }}
   <div class="grid cols-2">
@@ -35,7 +37,7 @@
   <div class="card" style="margin-top:1rem">
     <h2>Set up automatically</h2>
     <div class="grid cols-3">
-      {% field form.opt_plan %}{% field form.opt_scheme %}{% field form.opt_rubrics %}
+      {% field form.opt_plan %}{% if lesson_plan %}{% field form.opt_lesson_plan %}{% endif %}{% field form.opt_scheme %}{% field form.opt_rubrics %}
       {% field form.opt_questions %}{% field form.opt_assignments %}{% field form.opt_exams %}
     </div>
     <button class="btn primary big">Create course &amp; generate everything</button>

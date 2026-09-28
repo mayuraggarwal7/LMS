@@ -224,3 +224,64 @@ def co_distribution(exam):
         code = eq.question.outcome.code if eq.question.outcome else "Unmapped"
         dist[code] = dist.get(code, Decimal("0")) + eq.marks
     return dict(sorted(dist.items()))
+
+
+# --- re-exams and additional (make-up) assessments ------------------------------------------
+
+def retake_candidates(original, purpose):
+    """Students who should sit a re-exam / additional assessment for `original` (an Exam or Assignment).
+
+    Re-exam: absent, or below the component's minimum pass % (40% when none is set).
+    Additional: absent / not submitted / not graded, or below that same threshold.
+    """
+    from classroom.models import Assignment, Submission
+
+    from .analytics import exam_totals
+
+    course = original.course
+    component = original.component
+    threshold = (component.min_pass_percent if component and component.min_pass_percent else 40)
+    students = list(course.students)
+    chosen = []
+    if isinstance(original, Assignment):
+        scores = {s.student_id: s.score for s in Submission.objects.filter(assignment=original, score__isnull=False)}
+        for st in students:
+            score = scores.get(st.pk)
+            if score is None or (original.max_points and float(score) / float(original.max_points) * 100 < threshold):
+                chosen.append(st)
+        return chosen
+    totals = exam_totals(original)
+    total = float(original.total_marks) or 1
+    for st in students:
+        if st.pk not in totals:
+            if purpose == "additional":
+                chosen.append(st)  # never assessed
+            continue
+        value = totals[st.pk]
+        if value is None or float(value) / total * 100 < threshold:
+            chosen.append(st)
+    return chosen
+
+
+def create_retake(original, purpose, policy, candidates, title=None, date=None, total_marks=None, term=None,
+                  duration=None, blueprint=None):
+    """Create a re-exam / additional assessment linked to `original` with its own generated paper."""
+    from classroom.models import Assignment
+
+    is_assignment = isinstance(original, Assignment)
+    course = original.course
+    label = "Re-exam" if purpose == Exam.REEXAM else "Additional assessment"
+    exam = Exam.objects.create(
+        course=course, component=original.component, purpose=purpose, policy=policy, term=term,
+        title=title or f"{label}: {original.title}",
+        total_marks=Decimal(total_marks or (original.max_points if is_assignment else original.total_marks)),
+        duration_minutes=duration or (60 if is_assignment else original.duration_minutes), date=date,
+        replaces_exam=None if is_assignment else original, replaces_assignment=original if is_assignment else None,
+    )
+    if is_assignment:
+        exam.units.set([original.unit] if original.unit else course.units.all())
+    else:
+        exam.units.set(original.units.all() or course.units.all())
+    exam.candidates.set(candidates)
+    warnings = build_paper(exam, blueprint)
+    return exam, warnings

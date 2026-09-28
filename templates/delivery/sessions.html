@@ -19,7 +19,7 @@
     <td>{{ s.get_session_type_display }}{% if s.is_extra %} <span class="badge">extra</span>{% endif %}</td>
     <td>{% if s.plan_item %}{% if s.plan_item.unit %}<span class="sub">U{{ s.plan_item.unit.number }}</span> {% endif %}{{ s.plan_item.title|truncatechars:90 }}{% else %}<span class="sub">Buffer / revision</span>{% endif %}
       {% if s.actual_topics %}<div class="plan-meta">Covered: {{ s.actual_topics|truncatechars:90 }}</div>{% endif %}</td>
-    <td>{% if s.status == 'completed' %}<span class="badge ok">Delivered</span>{% if s.coverage == 'partial' %} <span class="badge warn">partial</span>{% endif %}{% elif s.status == 'cancelled' %}<span class="badge bad">Cancelled</span>{% elif s.date < today %}<span class="badge warn">Pending</span>{% else %}<span class="badge">Scheduled</span>{% endif %}
+    <td>{% if s.status == 'completed' %}<span class="badge ok">Delivered</span>{% if s.coverage == 'partial' %} <span class="badge warn">partial</span>{% endif %}{% elif s.status == 'cancelled' %}<span class="badge bad" title="{{ s.cancel_reason }}">{% if s.cancel_reason %}{{ s.cancel_reason|truncatechars:34 }}{% else %}Cancelled{% endif %}</span>{% elif s.date < today %}<span class="badge warn">Pending</span>{% else %}<span class="badge">Scheduled</span>{% endif %}
       {% if s.notes or s.notes_file or s.resource_link %} <span title="Notes available">🗒</span>{% endif %}</td>
     {% if request.is_course_teacher %}<td>{% with n=s.attendance.all|length %}{% if n %}{{ n }}{% else %}–{% endif %}{% endwith %}</td>
     {% else %}<td>{% with st=my_att|get:s.pk %}{% if st == 'A' %}<span class="badge bad">Absent</span>{% elif st %}<span class="badge ok">{{ st }}</span>{% endif %}{% endwith %}</td>{% endif %}

@@ -2,9 +2,9 @@
 {% block content %}
 <div class="page-head">
   <div><h2 style="margin:0">Gradebook</h2>
-    <p class="sub">Item scores roll up into each component (per its aggregation rule), then into a weighted final % and grade (10-point scale). Weights total {{ book.total_weight|num }}%.
+    <p class="sub"><sup class="badge warn">RE</sup> / <sup class="badge warn">ADD</sup> = score taken from a re-exam or additional assessment. Item scores roll up into each component (per its aggregation rule), then into a weighted final % and grade (10-point scale). Weights total {{ book.total_weight|num }}%.
       A student below a component's minimum pass % gets F.</p></div>
-  <div class="row"><a class="btn" href="{% url 'exam_scheme' course.pk %}">Assessment scheme</a><a class="btn primary" href="?format=csv">Export CSV</a></div>
+  <div class="row"><a class="btn" href="{% url 'cie_report' course.pk %}">CIE &amp; attendance report</a><a class="btn" href="{% url 'exam_scheme' course.pk %}">Assessment scheme</a><a class="btn primary" href="?format=csv">Export CSV</a></div>
 </div>
 <div class="table-wrap"><table class="matrix">
   <tr><th rowspan="2">Student</th>
@@ -14,7 +14,7 @@
   {% for row in book.rows %}<tr>
     <td style="white-space:nowrap"><a href="{% url 'my_grades' course.pk %}?student={{ row.student.pk }}">{{ row.student }}</a></td>
     {% for comp in row.components %}
-      {% for c in comp.cells %}<td>{% if c %}{% if c.score is None %}AB{% else %}{{ c.score|num }}{% endif %}{% else %}<span class="sub">·</span>{% endif %}</td>{% endfor %}
+      {% for c in comp.cells %}<td>{% if c %}{% if c.score is None %}AB{% else %}{{ c.score|num }}{% endif %}{% if c.retake %}<sup class="badge warn" title="From {{ c.retake }} (original: {{ c.original|default_if_none:'AB' }})">{{ c.retake }}</sup>{% endif %}{% else %}<span class="sub">·</span>{% endif %}</td>{% endfor %}
       <td><strong>{{ comp.marks|num }}</strong></td>
     {% endfor %}
     <td><strong>{{ row.final_percent|pct:1 }}</strong></td>

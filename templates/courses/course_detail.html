@@ -4,6 +4,7 @@
   <div class="stack">
     <div class="card">
       <h2>Delivery progress</h2>
+      {% if course.term %}<p class="sub"><span class="term-badge term-{{ course.term.kind }}">{{ course.term.badge }}</span> {{ course.term }}</p>{% endif %}
       <div class="meter"><div class="progress ok"><span style="width:{{ progress.percent }}%"></span></div><strong>{{ progress.percent }}%</strong></div>
       <p class="sub">{{ progress.delivered }} of {{ progress.total }} planned sessions delivered{% if progress.behind %} · <span class="badge warn">{{ progress.behind }} behind schedule</span>{% endif %}</p>
       {% if my_attendance %}<p>Your attendance: <span class="badge {{ my_attendance.percent|att_class }}">{{ my_attendance.percent|pct:1 }}</span> ({{ my_attendance.present }}/{{ my_attendance.total }})</p>{% endif %}

@@ -2,6 +2,7 @@
 {% block content %}
 <div class="page-head">
   <div><h2 style="margin:0">Marks entry — {{ exam.title }}</h2>
+    {% if exam.is_retake %}<p><span class="badge warn">{{ exam.get_purpose_display }}</span> — only the {{ rows|length }} registered student{{ rows|length|pluralize }} are listed.</p>{% endif %}
     <p class="sub">Enter question-wise marks (best for CO attainment), or just a total — it is distributed across questions proportionally. Tick AB for absentees.</p></div>
   <form method="post" enctype="multipart/form-data" class="row card flat" style="padding:.5rem">{% csrf_token %}
     <input type="file" name="file" accept=".csv" required style="font-size:.85rem"><button class="btn small">Import CSV</button>

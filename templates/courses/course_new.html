@@ -9,6 +9,7 @@
     <h2>1. Syllabus</h2>
     {{ form.non_field_errors }}
     {% field form.syllabus_file %}
+    <p class="sub">Already have a departmental lesson plan (Proposed date / Topics / CO table)? Upload it here (.doc works too) and the course follows it.</p>
     {% field form.syllabus_text %}
     {% if ai_enabled %}{% field form.use_ai %}{% else %}<p class="sub">Tip: set <code>ANTHROPIC_API_KEY</code> on the server to enable AI-assisted parsing and question writing. The built-in parser works without it.</p>{% endif %}
   </div>

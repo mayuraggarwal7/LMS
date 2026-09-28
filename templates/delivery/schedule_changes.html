@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Schedule changes{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Schedule changes</h1>
+  <p class="sub">Sudden holiday? Classes on that day are cancelled and every affected learning plan shifts to the next slots.
+  Need to catch up? Add a supplementary teaching day that runs another weekday's timetable — the plan pulls forward onto it.</p></div>
+  <a class="btn" href="{% url 'pending_attendance' %}">← Attendance</a></div>
+<div class="grid cols-2">
+  <form method="post" class="card">{% csrf_token %}
+    <h2>Declare a change</h2>
+    {{ form.non_field_errors }}
+    <div class="field radio-row">{{ form.kind }}</div>
+    <div class="form-grid">{% field form.date %}{% field form.follows_weekday %}</div>
+    {% field form.name %}
+    <div class="checks">{% field form.courses %}</div>
+    {% if form.whole_institution %}{% field form.whole_institution %}{% endif %}
+    <button class="btn primary">Apply</button>
+  </form>
+  <div class="card">
+    <h2>Will the syllabus still fit?</h2>
+    <table class="compact">
+      <tr><th>Course</th><th class="num">Plan left</th><th class="num">Classes left</th><th></th></tr>
+      {% for r in rows %}<tr><td><a href="{% url 'timetable' r.course.pk %}">{{ r.course.code }}</a> {{ r.course.title|truncatechars:30 }}</td>
+        <td class="num">{{ r.capacity.remaining_items }}</td><td class="num">{{ r.capacity.open_sessions }}</td>
+        <td>{% if r.capacity.shortfall %}<span class="badge bad">short by {{ r.capacity.shortfall }}</span>{% else %}<span class="badge ok">fits</span>{% endif %}</td></tr>
+      {% empty %}<tr><td class="sub">No courses in this term.</td></tr>{% endfor %}
+    </table>
+    <p class="sub">"Short by N" means N planned sessions have no class left before the end date: add supplementary days, extra classes, or merge plan items.</p>
+  </div>
+</div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card"><h2>Holidays &amp; supplementary days</h2>
+    {% for r in rows %}{% if r.holidays or r.supplementary %}<h3>{{ r.course.code }}</h3>
+      {% for h in r.holidays %}<div><span class="badge bad">Holiday</span> {{ h.date|date:"D j M Y" }} · {{ h.name }}</div>{% endfor %}
+      {% for s in r.supplementary %}<div><span class="badge ok">Extra day</span> {{ s.date|date:"D j M Y" }} follows {{ s.get_follows_weekday_display }}{% if s.reason %} · {{ s.reason }}{% endif %}</div>{% endfor %}
+    {% endif %}{% endfor %}
+  </div>
+  <div class="card"><h2>Recently cancelled / moved classes</h2>
+    <table class="compact">{% for s in cancelled %}<tr><td>{{ s.date|date:"D j M" }} {{ s.start_time|time:"H:i" }}</td><td>{{ s.course.code }}</td><td class="sub">{{ s.cancel_reason|default:"Cancelled" }}</td>
+      <td><a href="{% url 'session_detail' s.course_id s.pk %}">open</a></td></tr>{% empty %}<tr><td class="sub">None.</td></tr>{% endfor %}</table>
+  </div>
+</div>
+{% endblock %}

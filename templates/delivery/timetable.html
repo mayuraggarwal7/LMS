@@ -20,13 +20,26 @@
       <form method="post" class="form-grid">{% csrf_token %}{% field dates_form.start_date %}{% field dates_form.end_date %}
         <div><button name="action" value="dates" class="btn">Save dates</button></div></form>
     </div>
+    {% if capacity.shortfall %}<div class="card" style="background:var(--bad-soft)"><strong>⚠ {{ capacity.shortfall }} planned session{{ capacity.shortfall|pluralize }} no longer fit</strong>
+      <p class="sub" style="margin:0">{{ capacity.remaining_items }} plan items left, {{ capacity.open_sessions }} classes left. Add a supplementary teaching day below or an extra class.</p></div>{% endif %}
     <div class="card">
-      <h2>Holidays &amp; no-class days</h2>
+      <h2>Sudden holiday / no-class day</h2>
+      <p class="sub">Classes on that day are cancelled and the plan shifts forward automatically. For several classes at once use <a href="{% url 'schedule_changes' %}">Schedule changes</a>.</p>
       <form method="post" class="form-grid">{% csrf_token %}{% field holiday_form.date %}{% field holiday_form.name %}
-        <div><button name="action" value="holiday" class="btn">Add</button></div></form>
+        <div><button name="action" value="holiday" class="btn">Declare holiday</button></div></form>
       {% for h in holidays %}
         <form method="post" class="row between" style="border-top:1px solid var(--border);padding:.3rem 0">{% csrf_token %}
           <span>{{ h.date|date:"D j M Y" }} · {{ h.name }}</span><input type="hidden" name="id" value="{{ h.pk }}"><button name="action" value="delete_holiday" class="btn small ghost">✕</button></form>
+      {% endfor %}
+    </div>
+    <div class="card">
+      <h2>Supplementary teaching days</h2>
+      <p class="sub">Compensate lost classes: an extra day (e.g. a Saturday) that runs a weekday's timetable.</p>
+      <form method="post" class="form-grid">{% csrf_token %}{% field supp_form.date %}{% field supp_form.follows_weekday %}{% field supp_form.reason %}
+        <div><button name="action" value="supplementary" class="btn">Add day</button></div></form>
+      {% for d in supplementary %}
+        <form method="post" class="row between" style="border-top:1px solid var(--border);padding:.3rem 0">{% csrf_token %}
+          <span>{{ d.date|date:"D j M Y" }} · follows {{ d.get_follows_weekday_display }}{% if d.reason %} · {{ d.reason }}{% endif %}</span><input type="hidden" name="id" value="{{ d.pk }}"><button name="action" value="delete_supplementary" class="btn small ghost">✕</button></form>
       {% endfor %}
     </div>
   </div>

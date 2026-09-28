@@ -7,7 +7,7 @@ from .models import User
 class SignupForm(UserCreationForm):
     class Meta:
         model = User
-        fields = ["role", "first_name", "last_name", "username", "email", "department", "year_of_study", "roll_no"]
+        fields = ["role", "first_name", "last_name", "username", "email", "department", "year_of_study", "roll_no", "prn"]
         widgets = {"role": forms.RadioSelect}
         help_texts = {"username": ""}
 
@@ -16,9 +16,10 @@ class SignupForm(UserCreationForm):
         self.fields["first_name"].required = True
         self.fields["year_of_study"].help_text = "Students only"
         self.fields["roll_no"].help_text = "Students only"
+        self.fields["prn"].help_text = "Students only"
 
 
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "department", "year_of_study", "roll_no"]
+        fields = ["first_name", "last_name", "email", "department", "year_of_study", "roll_no", "prn"]

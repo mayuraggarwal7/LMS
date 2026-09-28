@@ -9,9 +9,10 @@
     <form method="get" class="row"><select name="unit" onchange="this.form.submit()"><option value="">All units</option>{% for u in units %}<option value="{{ u.number }}" {% if unit_filter == u.number|stringformat:"s" %}selected{% endif %}>Unit {{ u.number }}</option>{% endfor %}</select></form>
     {% if request.is_course_teacher %}
       <a class="btn" href="{% url 'plan_item_add' course.pk %}">+ Add session</a>
+      <a class="btn" href="{% url 'plan_import' course.pk %}">⤒ Import lesson plan</a>
       <form method="post" action="{% url 'plan_regenerate' course.pk %}" class="inline">{% csrf_token %}<button class="btn" data-confirm="Rebuild the plan from the syllabus? Your edits to plan items will be replaced (delivered sessions keep their notes).">↻ Regenerate</button></form>
     {% endif %}
-    <button class="btn" onclick="window.print()">Print</button>
+    <a class="btn" href="{% url 'lesson_plan_document' course.pk %}">📄 Lesson plan (dept. format)</a>
   </div>
 </div>
 <div class="table-wrap">
@@ -20,7 +21,7 @@
   {% for r in rows %}{% with i=r.item %}
   <tr id="item-{{ i.pk }}" class="{% if r.delivered %}highlight{% endif %}">
     <td>{{ i.sequence }}</td>
-    <td style="white-space:nowrap">{% if r.session %}<a href="{% url 'session_detail' course.pk r.session.pk %}">{{ r.session.date|date:"D j M" }}</a>{% if r.delivered %}<br><span class="badge ok">Delivered</span>{% endif %}{% else %}<span class="sub">unscheduled</span>{% endif %}</td>
+    <td style="white-space:nowrap">{% if r.session %}<a href="{% url 'session_detail' course.pk r.session.pk %}">{{ r.session.date|date:"D j M" }}</a>{% if r.delivered %}<br><span class="badge ok">Delivered</span>{% endif %}{% elif i.planned_date %}{{ i.planned_date|date:"D j M" }}<br><span class="sub">proposed</span>{% else %}<span class="sub">unscheduled</span>{% endif %}</td>
     <td><span class="badge">{{ i.get_session_type_display }}</span>{% if i.unit %} <span class="sub">Unit {{ i.unit.number }}</span>{% endif %}<br>
       <strong>{{ i.title }}</strong><div class="plan-meta">{{ i.objective }}</div>
       {% if i.pre_class or i.post_class %}<details class="plan-meta"><summary>Before / in / after class</summary>

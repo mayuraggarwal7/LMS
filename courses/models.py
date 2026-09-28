@@ -26,7 +26,38 @@ def generate_join_code():
     return "".join(secrets.choice(alphabet) for _ in range(7))
 
 
+class AcademicTerm(models.Model):
+    """An academic term (odd/even semester, re-exam, special exam) - courses belong to one."""
+
+    ODD, EVEN, REEXAM, SPECIAL = "odd", "even", "reexam", "special"
+    KIND_CHOICES = [(ODD, "Odd term"), (EVEN, "Even term"), (REEXAM, "Re-exam"), (SPECIAL, "Special exam")]
+    BADGE = {ODD: "O", EVEN: "E", REEXAM: "R", SPECIAL: "SP"}
+
+    name = models.CharField(max_length=120, help_text="e.g. Even Term 2026")
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default=ODD)
+    academic_year = models.PositiveSmallIntegerField(help_text="e.g. 2026")
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=False, help_text="The current term everyone lands in")
+
+    class Meta:
+        ordering = ["-is_active", "-academic_year", "-start_date", "-pk"]
+
+    def __str__(self):
+        return f"Academic Year {self.academic_year} ({self.name})"
+
+    @property
+    def badge(self):
+        return self.BADGE.get(self.kind, "?")
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.is_active:
+            AcademicTerm.objects.exclude(pk=self.pk).filter(is_active=True).update(is_active=False)
+
+
 class Course(models.Model):
+    term = models.ForeignKey(AcademicTerm, on_delete=models.SET_NULL, null=True, blank=True, related_name="courses")
     teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="courses_taught")
     co_teachers = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="courses_co_taught")
     code = models.CharField(max_length=30)
@@ -157,6 +188,8 @@ class PlanItem(models.Model):
     topics = models.ManyToManyField(Topic, blank=True, related_name="plan_items")
     experiment = models.ForeignKey(Experiment, on_delete=models.SET_NULL, null=True, blank=True)
     title = models.CharField(max_length=400)
+    planned_date = models.DateField("Proposed date", null=True, blank=True,
+                                    help_text="From an imported lesson plan; the synced timetable date is used when present")
     objective = models.TextField("Learning objective", blank=True)
     bloom_level = models.PositiveSmallIntegerField(choices=BLOOM_LEVELS, default=2)
     outcomes = models.ManyToManyField(CourseOutcome, blank=True, related_name="plan_items")

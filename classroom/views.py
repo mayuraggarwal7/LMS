@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 
 from courses.access import course_member, course_teacher
 from delivery.models import ClassSession
+from delivery.services import attendance_stats
 from exams.analytics import student_co_profile
 
 from . import grading
@@ -330,4 +331,64 @@ def my_grades(request, course):
     return render(request, "classroom/my_grades.html", {
         "course": course, "tab": "grades", "book": book, "row": row, "student": student, "subs": subs,
         "co_profile": student_co_profile(course, student, released_only=not request.is_course_teacher),
+    })
+
+
+SORT_KEYS = {
+    "roll": lambda st: (st.roll_no or "~", st.display_name.lower()),
+    "name": lambda st: st.display_name.lower(),
+    "prn": lambda st: (st.prn or "~", st.display_name.lower()),
+}
+
+
+@course_teacher
+def cie_report(request, course):
+    """Consolidated CIE (continuous internal evaluation) and attendance report.
+
+    One row per student: every internal item (NE = not entered, AB = absent), each
+    component's bucket marks, total CIE out of the internal maximum and attendance %.
+    """
+    sort = request.GET.get("sort", "roll") if request.GET.get("sort") in SORT_KEYS else "roll"
+    students = sorted(course.students, key=SORT_KEYS[sort])
+    book = grading.build_gradebook(course, students)
+    attendance = attendance_stats(course, students)
+    include_ese = request.GET.get("ese") == "1"
+    columns = [c for c in book["columns"] if include_ese or c["component"].is_internal]
+    keep = {c["component"].pk for c in columns}
+    cie_max = sum((c["component"].max_marks for c in columns if c["component"].is_internal), Decimal("0"))
+    rows = []
+    for i, row in enumerate(book["rows"], start=1):
+        comps = [c for c in row["components"] if c["component"].pk in keep]
+        internal = [c for c in comps if c["component"].is_internal]
+        entered = [c["marks"] for c in internal if c["marks"] is not None]
+        rows.append({
+            "sl": i, "student": row["student"], "components": comps,
+            "cie_total": sum(entered, Decimal("0")) if entered else None,
+            "attendance": attendance.get(row["student"].pk),
+        })
+    if request.GET.get("format") == "csv":
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = f'attachment; filename="{course.code}-CIE-attendance.csv"'
+        writer = csv.writer(response)
+        header = ["SL No.", "Student name", "Roll no.", "PRN no."]
+        for col in columns:
+            for item in col["items"]:
+                header.append(f"{col['component'].name}: {item['obj']} (/{item['max']:g})")
+            header.append(f"{col['component'].name} bucket (/{col['component'].max_marks:g})")
+        header += [f"Total CIE (/{cie_max:g})", "Attended", "Conducted", "Attendance %"]
+        writer.writerow(header)
+        for r in rows:
+            line = [r["sl"], r["student"].display_name, r["student"].roll_no, r["student"].prn]
+            for comp in r["components"]:
+                for cell in comp["cells"]:
+                    line.append("NE" if not cell else ("AB" if cell["score"] is None else cell["score"]))
+                line.append("NE" if comp["marks"] is None else comp["marks"])
+            att = r["attendance"] or {}
+            line += ["NE" if r["cie_total"] is None else r["cie_total"], att.get("present", ""), att.get("total", ""),
+                     "" if att.get("percent") is None else att["percent"]]
+            writer.writerow(line)
+        return response
+    return render(request, "classroom/cie_report.html", {
+        "course": course, "tab": "grades", "columns": columns, "rows": rows, "sort": sort, "cie_max": cie_max,
+        "include_ese": include_ese,
     })

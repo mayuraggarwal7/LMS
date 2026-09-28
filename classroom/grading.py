@@ -137,7 +137,7 @@ def component_items(component, released_only=False):
     items = []
     for a in component.assignments.filter(status=Assignment.PUBLISHED).order_by("due_at", "pk"):
         items.append(("assignment", a))
-    exams = component.exams.order_by("date", "pk")
+    exams = component.exams.filter(purpose="regular").order_by("date", "pk")
     if released_only:
         exams = exams.filter(status="marked")
     for e in exams:
@@ -152,6 +152,33 @@ def _aggregate(component, percents):
     if component.aggregation == "best" and component.best_of:
         percents = sorted(percents, reverse=True)[: component.best_of]
     return sum(percents) / len(percents)
+
+
+def apply_retakes(original, scores, maximum, released_only=False):
+    """Fold re-exam / additional-assessment results into an item's scores (in place).
+
+    Each retake is scaled to the original item's maximum. Policy 'replace' uses the retake
+    score; 'best' keeps the better of the two. Cells are tagged so reports can show it.
+    """
+    from exams.analytics import exam_totals
+
+    for retake in original.retakes.all().order_by("date", "pk"):
+        if released_only and retake.status != "marked":
+            continue
+        candidate_ids = set(retake.candidates.values_list("pk", flat=True))
+        total = float(retake.total_marks) or 1
+        for sid, value in exam_totals(retake).items():
+            if sid not in candidate_ids or value is None:
+                continue
+            new_pct = float(value) / total * 100
+            old = scores.get(sid)
+            old_pct = old["percent"] if old and old["percent"] is not None else None
+            if retake.policy == "best" and old_pct is not None and old_pct >= new_pct:
+                continue
+            scores[sid] = {
+                "score": q(Decimal(new_pct) / 100 * Decimal(maximum)), "percent": new_pct,
+                "retake": "RE" if retake.purpose == "reexam" else "ADD", "original": old["score"] if old else None,
+            }
 
 
 def build_gradebook(course, students=None, released_only=False):
@@ -178,14 +205,16 @@ def build_gradebook(course, students=None, released_only=False):
                     s.student_id: {"score": s.score, "percent": float(s.score) / float(obj.max_points) * 100 if obj.max_points else None}
                     for s in subs
                 }
-                cols.append({"kind": kind, "obj": obj, "max": obj.max_points})
+                maximum = obj.max_points
             else:
                 totals = exam_totals(obj)
                 item_scores[key] = {
                     sid: {"score": v, "percent": float(v) / float(obj.total_marks) * 100 if obj.total_marks and v is not None else (0.0 if v is None else None)}
                     for sid, v in totals.items()
                 }
-                cols.append({"kind": kind, "obj": obj, "max": obj.total_marks})
+                maximum = obj.total_marks
+            apply_retakes(obj, item_scores[key], maximum, released_only)
+            cols.append({"kind": kind, "obj": obj, "max": maximum})
         columns.append({"component": comp, "items": cols})
 
     rows = []

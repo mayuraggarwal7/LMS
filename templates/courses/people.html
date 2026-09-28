@@ -25,9 +25,9 @@
 </div>
 <h2>Students ({{ students|length }})</h2>
 <div class="table-wrap"><table>
-  <tr><th>Roll no</th><th>Name</th><th>Email</th>{% if request.is_course_teacher %}<th>Attendance</th><th></th>{% endif %}</tr>
+  <tr><th>Roll no</th><th>Name</th><th>PRN</th><th>Email</th>{% if request.is_course_teacher %}<th>Attendance</th><th></th>{% endif %}</tr>
   {% for s in students %}<tr>
-    <td>{{ s.user.roll_no }}</td><td>{{ s.user.display_name }}</td><td>{{ s.user.email }}</td>
+    <td>{{ s.user.roll_no }}</td><td>{{ s.user.display_name }}</td><td class="mono">{{ s.user.prn }}</td><td>{{ s.user.email }}</td>
     {% if request.is_course_teacher %}<td><span class="badge {{ s.attendance.percent|att_class }}">{{ s.attendance.percent|pct:1 }}</span></td>
     <td class="right"><a class="btn small" href="{% url 'my_grades' course.pk %}?student={{ s.user.pk }}">Grades</a>
       <form method="post" action="{% url 'remove_student' course.pk s.user.pk %}" class="inline">{% csrf_token %}<button class="btn small ghost" data-confirm="Remove {{ s.user.display_name }} from this class?">Remove</button></form></td>{% endif %}

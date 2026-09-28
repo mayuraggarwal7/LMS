@@ -13,6 +13,7 @@
     <div><div class="stat">{{ summary.assignments }}</div><div class="stat-label">draft assignments</div></div>
     <div><div class="stat">{{ summary.exams }}</div><div class="stat-label">draft exam papers</div></div>
   </div>
+  {% if summary.from_lesson_plan %}<p class="badge info">Learning plan built from your uploaded lesson plan</p>{% endif %}
   {% for w in summary.warnings %}<p class="badge warn">{{ w }}</p>{% endfor %}
   {% endif %}
   <h2>Next steps</h2>

@@ -18,7 +18,7 @@ from accounts.models import User
 from classroom import grading
 from classroom.models import Assignment, Submission
 from courses import syllabus
-from courses.models import Enrollment
+from courses.models import AcademicTerm, Enrollment
 from courses.setup import build_course
 from delivery.models import AttendanceRecord, ClassSession, Holiday, TimetableSlot
 from delivery.services import sync_timetable
@@ -44,7 +44,8 @@ class Command(BaseCommand):
             first, last = name.split()
             s, created = User.objects.get_or_create(
                 username=f"s{i:02d}", defaults={"first_name": first, "last_name": last, "role": User.STUDENT,
-                                                "roll_no": f"23CE{i:03d}", "year_of_study": 2, "department": "Computer Engineering"})
+                                                "roll_no": f"{9650 + i}", "prn": f"20230164023{i:05d}",
+                                                "year_of_study": 2, "department": "Computer Engineering"})
             if created:
                 s.set_password("student123")
                 s.save()
@@ -54,14 +55,24 @@ class Command(BaseCommand):
             self.stdout.write("Demo course already exists - nothing to do.")
             return
 
+        today = timezone.localdate()
+        year = today.year
+        for name, kind, ay, active in [
+            (f"Odd Term {year - 1}", AcademicTerm.ODD, year - 1, False),
+            (f"Re-Exam Even {year - 1}", AcademicTerm.REEXAM, year - 1, False),
+            (f"Special Exam Odd {year - 1}", AcademicTerm.SPECIAL, year - 1, False),
+            (f"Even Term {year}", AcademicTerm.EVEN, year, True),
+        ]:
+            AcademicTerm.objects.get_or_create(name=name, defaults={"kind": kind, "academic_year": ay, "is_active": active})
+        term = AcademicTerm.objects.get(is_active=True)
+
         text = (Path(settings.BASE_DIR) / "samples" / "data_structures_syllabus.txt").read_text()
         data = syllabus.parse_syllabus(text)
-        today = timezone.localdate()
         start = today - timedelta(days=today.weekday()) - timedelta(weeks=5)
         info = {"code": data["code"], "title": data["title"], "department": "Computer Engineering", "year": 2, "semester": 3,
                 "division": "A", "academic_year": "2026-27", "credits": Decimal("4"), "lecture_hours": 3, "tutorial_hours": 0,
                 "practical_hours": 2, "start_date": start, "end_date": start + timedelta(weeks=14),
-                "prerequisites": data["prerequisites"], "syllabus_text": text}
+                "prerequisites": data["prerequisites"], "syllabus_text": text, "term": term}
         course, summary = build_course(teacher, data, info)
         for s in students:
             Enrollment.objects.get_or_create(course=course, student=s)
