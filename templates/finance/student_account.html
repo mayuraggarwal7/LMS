@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}Fee account{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Fee account — {{ sp.user.display_name }}</h1><p class="sub">{{ sp.admission_no }} · {{ sp.program }} · {{ sp.get_admission_type_display }} · {{ sp.category }}</p></div>
+  <a class="btn" href="{% url 'student_detail' sp.pk %}">Academic progress</a></div>
+{% include "includes/console_nav.html" with ctab="finance" %}
+<div class="grid cols-2">
+  <div class="card"><h3 style="margin-top:0">Ledger</h3>
+    <table class="compact"><tr><th>Date</th><th>Entry</th><th class="num">Charge</th><th class="num">Paid</th><th class="num">Balance</th></tr>
+    {% for r in ledger.rows %}<tr><td>{{ r.date|date:"j M Y" }}</td><td>{{ r.text }}</td><td class="num">{% if r.debit %}₹{{ r.debit|floatformat:0|intcomma }}{% endif %}</td><td class="num">{% if r.credit %}₹{{ r.credit|floatformat:0|intcomma }}{% endif %}</td><td class="num">₹{{ r.balance|floatformat:0|intcomma }}</td></tr>
+    {% empty %}<tr><td class="sub" colspan="5">No invoices yet.</td></tr>{% endfor %}</table>
+    {% if concessions %}<h3>Concessions</h3>{% for c in concessions %}<div class="sub">{{ c.academic_year }} · {{ c.reason }}{% if c.percent %} · {{ c.percent }}%{% endif %}{% if c.amount %} · ₹{{ c.amount }}{% endif %}{% if c.head %} on {{ c.head }}{% endif %}</div>{% endfor %}{% endif %}
+  </div>
+  <div class="card"><h3 style="margin-top:0">Invoices</h3>
+    {% for inv in invoices %}<div style="padding:.5rem 0;border-bottom:1px solid var(--border)"><strong>{{ inv.academic_year }}</strong> · year {{ inv.year_of_study }} · gross ₹{{ inv.gross|floatformat:0|intcomma }}{% if inv.concession %} − ₹{{ inv.concession|floatformat:0|intcomma }} concession{% endif %} = <strong>₹{{ inv.amount|floatformat:0|intcomma }}</strong>
+      · {% if inv.balance > 0 %}<span class="badge warn">₹{{ inv.balance|floatformat:0|intcomma }} due</span>{% else %}<span class="badge ok">Paid</span>{% endif %}
+      {% if inv.balance > 0 %}<form method="post" class="row" style="margin-top:.4rem">{% csrf_token %}<input type="hidden" name="invoice" value="{{ inv.pk }}">
+        <input type="number" step="1" name="amount" value="{{ inv.balance|floatformat:0 }}" style="max-width:9rem"><input type="date" name="paid_on" value="{{ today|date:'Y-m-d' }}" style="max-width:10rem">
+        <select name="mode" style="max-width:9rem">{% for k, v in modes %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select><input type="text" name="reference" placeholder="UTR / cheque no." style="max-width:10rem">
+        <button class="btn small primary">Record payment</button></form>{% endif %}</div>
+    {% empty %}<p class="sub">No invoices. Raise them from the Accounts page.</p>{% endfor %}</div>
+</div>
+{% endblock %}

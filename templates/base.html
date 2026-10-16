@@ -16,6 +16,9 @@
       <a class="term-chip" href="{% url 'term_switch' %}?next={{ request.path|urlencode }}" title="Switch term">
         {% if current_term %}<span class="term-badge term-{{ current_term.kind }}">{{ current_term.badge }}</span>{{ current_term.name }}{% else %}All terms{% endif %} ▾</a>
       <a href="{% url 'dashboard' %}">Dashboard</a>
+      {% if user.is_staff %}<a href="{% url 'admin_console' %}">Admin console</a>{% endif %}
+      {% if user.student_profile %}<a href="{% url 'my_progress' %}">My progress</a>{% endif %}
+      {% if user.faculty_profile %}<a href="{% url 'my_hr' %}">My HR</a>{% endif %}
       {% if user.is_teacher %}<a href="{% url 'pending_attendance' %}">Attendance</a>
       <a class="btn small primary" href="{% url 'course_new' %}">+ New course</a>{% endif %}
       <a href="{% url 'profile' %}">{{ user.display_name }}</a>

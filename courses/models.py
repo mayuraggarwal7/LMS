@@ -58,6 +58,8 @@ class AcademicTerm(models.Model):
 
 class Course(models.Model):
     term = models.ForeignKey(AcademicTerm, on_delete=models.SET_NULL, null=True, blank=True, related_name="courses")
+    program = models.ForeignKey("institution.Program", on_delete=models.SET_NULL, null=True, blank=True,
+                                related_name="courses", help_text="Branch this course belongs to")
     teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="courses_taught")
     co_teachers = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name="courses_co_taught")
     code = models.CharField(max_length=30)

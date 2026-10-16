@@ -13,11 +13,13 @@ It connects teachers and students the way Google Classroom does: class codes, a 
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_demo          # optional demo data
+python manage.py seed_institution --demo   # optional: FRCRCE college setup + demo students, payroll, punches
 python manage.py runserver
 ```
 
 Open http://127.0.0.1:8000. Demo logins: `teacher / teacher123` and students `s01`–`s12 / student123`.
-Create an admin account with `python manage.py createsuperuser` (the admin site is at `/admin/`).
+After `seed_institution --demo` the super admin is `admin / admin123` (Admin console at `/admin-console/`) and demo students `demo-comp-2024-001` etc. use `student123`.
+Create your own admin account with `python manage.py createsuperuser` (the Django admin site is at `/admin/`).
 
 Run the tests with `python manage.py test`.
 
@@ -108,6 +110,42 @@ Each plan item suggests tools that match its topic, for example:
 - Read shared class notes.
 - See a running grade and their own CO profile. Unreleased exam marks and draft grades are hidden.
 
+## College administration (super admins)
+
+Staff/superuser accounts get an **Admin console** with these modules.
+
+### Institution, programmes and rules (AICTE → university → institute)
+- Set up the institution, departments (with HOD) and programmes (UG/PG/PhD, intake, duration, credits, NBA status).
+- Rules come in **regulations** with a scope: AICTE, the affiliating university, or the institute. For any rule, the more specific scope wins (institute > university > AICTE), and a programme-specific rule wins over a college-wide one.
+- Rule keys include: minimum attendance, faculty-student ratio, cadre ratio, workload norms per designation, lateral-entry and TFWS quotas, minimum programme credits, pass percentage, maximum backlogs for promotion, maximum years to complete, PhD faculty share, class and lab batch size.
+- The rules page flags any university or institute rule that is weaker than the AICTE norm. The **AICTE report** shows faculty-student ratio, cadre ratio, PhD share, intake per programme and every compliance issue.
+
+### Students: admission to passing out
+- Admit a student (CAP / institute / minority / NRI / TFWS / lateral entry; lateral entry starts in semester 3).
+- Each semester gets a record: SGPA, credits, attendance and cumulative backlogs. It can be computed from the LMS gradebook or typed in.
+- **Promote** applies the rules: low attendance → detained, too many backlogs → fail, otherwise pass/ATKT. A student passes out after the final semester with no backlogs.
+- The student page shows a semester-by-semester timeline, CGPA, fees and campus days. Students see their own record under **My progress**.
+
+### Teacher HR
+- Teaching, lab (lab assistants and technicians) and non-teaching staff, with designation, qualification, PhD, experience and biometric id.
+- Core competencies rated 1–5 per staff member. The **allocation board** suggests the best-matched faculty for each course from their competencies and spare hours.
+- Workload allocation (theory, tutorial, lab, lab assistance, projects, admin) is checked against the AICTE weekly norms for each designation.
+- Ratings from students, the HOD, peers and self, plus bulk import of feedback averages.
+
+### Accounts (fees to payouts)
+- Fee heads and fee structures per programme, year and admission type; concessions; TFWS waives tuition.
+- Raise invoices in bulk, record payments with receipt numbers, and view each student's ledger.
+- Salary structures and monthly payroll. Loss-of-pay days come from biometric presence; visiting faculty are paid per completed class hour.
+- The finance dashboard shows fees billed, collected and outstanding against payroll.
+
+### Biometric attendance
+- Register devices (each gets an API key). Upload a CSV export, or have the device push to `POST /api/biometric/punches` with header `X-Device-Key` and body `{"punches":[{"biometric_id":"COMP001","timestamp":"2026-10-16T08:55:00+05:30","direction":"in"}]}`.
+- People are matched by roll number / PRN / admission number (students) or biometric id / employee id (staff).
+- Each course's attendance report has **Compare with biometric**. It flags students marked present who were not on campus, and students on campus who were marked absent. Staff reports show classes taught without a punch.
+
+### FRCRCE data
+`seed_institution` loads `samples/frcrce_public_data.json`: Fr. Conceicao Rodrigues College of Engineering, Bandra (Mumbai University, autonomous). It contains programmes and intake, departments and HODs, faculty, fees and academic rules gathered from public sources. The `_provenance` and `gaps` fields in the file say what was found and what still needs checking. `--demo` adds synthetic students, payments, payroll and punches, all clearly marked DEMO. The AICTE norm values in the default regulation are the commonly published ones; check them against the current AICTE Approval Process Handbook.
+
 ## AI assistance (optional)
 
 Set `ANTHROPIC_API_KEY` to have Claude parse unusual syllabus layouts and write exam questions with marking schemes. The results use structured JSON output and are checked before use. The default model is `claude-opus-5` (change it with `LMS_AI_MODEL`). Server-side refusal fallback is turned on. Without a key, or if a call fails, the built-in parser and template question generator are used, so every feature works offline.
@@ -137,4 +175,9 @@ The ESE and TW minimum pass is 40%. Each course can change these on its **Exams 
 | `courses` | Course, COs, units/topics, learning plan, rubrics, enrolment; `syllabus.py` (PDF/DOCX/DOC extraction, parsing), `lessonplan.py` (lesson plan import/export), `planner.py` (plan generation), `setup.py` (auto-configuration), `terms.py` (academic terms), `ai.py` (optional Claude) |
 | `delivery` | Timetable slots, holidays, supplementary days, class sessions, notes, attendance; `services.py` (sync, holidays, supplementary days, rescheduling, carry-over, capacity, ICS, stats) |
 | `classroom` | Stream, assignments, submissions, rubric scores; `grading.py` (rubric⇄score, gradebook) |
+| `institution` | Institution, departments, programmes, regulations and rules (AICTE/university/institute), compliance, AICTE report, `seed_institution` |
+| `students` | Admission, semester records, course results, SGPA/CGPA, promotion and pass-out |
+| `hr` | Staff profiles, competencies, workload allocation and norms, ratings, staffing metrics |
+| `finance` | Fee structures, concessions, invoices, payments, salary structures, payroll |
+| `biometric` | Devices, punches (CSV/API), presence, correlation with course attendance and teaching |
 | `exams` | Assessment components, question bank, exams, marks; `services.py` (scheme, question generation, paper builder, re-exams / additional assessments), `analytics.py` (totals, CO attainment, question analysis) |

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}{{ program.code }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ program }}</h1>
+  <p class="sub">{{ program.department|default:"" }} · {{ program.duration_years }} years · intake {{ program.intake }}{% if program.year_started %} · since {{ program.year_started }}{% endif %}{% if program.nba_accredited %} · <span class="badge ok">NBA accredited{% if program.nba_valid_till %} to {{ program.nba_valid_till }}{% endif %}</span>{% endif %}</p></div>
+  <a class="btn" href="{% url 'program_edit' program.pk %}">Edit</a></div>
+{% include "includes/console_nav.html" with ctab="depts" %}
+<div class="grid cols-2">
+  <div class="card"><h2 style="margin-top:0">Rules in force for this branch</h2>
+    <p class="sub">Most specific wins: institute over university over AICTE; branch-specific over college-wide.</p>
+    <table class="compact"><tr><th>Rule</th><th>Value</th><th>From</th></tr>
+    {% for e in effective %}<tr><td>{{ e.label }}</td><td><strong>{{ e.rule.display_value }}</strong> {{ e.unit }}</td>
+      <td><span class="badge {% if e.rule.regulation.scope == 'aicte' %}info{% elif e.rule.regulation.scope == 'institute' %}ok{% endif %}">{{ e.rule.regulation.get_scope_display|truncatechars:22 }}</span>
+      {% if e.overridden %}<div class="sub">overrides {% for o in e.overridden %}{{ o.regulation.get_scope_display|truncatechars:12 }} {{ o.display_value }}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}</td></tr>{% endfor %}</table></div>
+  <div class="card"><h2 style="margin-top:0">Students by year</h2>
+    <table class="compact"><tr><th>Year</th><th class="num">Studying</th><th class="num">of which lateral</th><th></th></tr>
+    {% for y in years %}<tr><td>Year {{ y.year }}</td><td class="num">{{ y.count }}</td><td class="num">{{ y.lateral }}</td><td><a href="{% url 'student_list' %}?program={{ program.pk }}&year={{ y.year }}">list</a></td></tr>{% endfor %}</table>
+    <h3>Fee structures</h3>
+    <table class="compact">{% for f in fees %}<tr><td>{{ f.academic_year }} · Year {{ f.year_of_study }}{% if f.category %} · {{ f.category }}{% endif %}</td>
+      <td>{% for l in f.lines.all %}{{ l.head }} ₹{{ l.amount|floatformat:0|intcomma }}{% if not forloop.last %} + {% endif %}{% endfor %}</td><td class="num"><strong>₹{{ f.total|floatformat:0|intcomma }}</strong></td></tr>
+    {% empty %}<tr><td class="sub">None.</td></tr>{% endfor %}</table></div>
+</div>
+{% endblock %}

@@ -43,6 +43,11 @@ INSTALLED_APPS = [
     "delivery",
     "classroom",
     "exams",
+    "institution",
+    "students",
+    "hr",
+    "finance",
+    "biometric",
 ]
 
 MIDDLEWARE = [

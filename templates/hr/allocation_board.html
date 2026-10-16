@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Workload allocation{% endblock %}
+{% block content %}
+<h1>Workload allocation{% if term %} <span class="sub">{{ term }}</span>{% endif %}</h1>
+<p class="sub">Each course with its allocated staff, and the best available faculty ranked by competency match and spare hours against their AICTE workload norm.</p>
+{% include "includes/console_nav.html" with ctab="alloc" %}
+<div class="table-wrap"><table>
+  <tr><th>Course</th><th>Allocated</th><th>Suggested teaching faculty</th><th>Lab staff</th></tr>
+  {% for r in rows %}<tr>
+    <td><a href="{% url 'course_detail' r.course.pk %}"><strong>{{ r.course.code }}</strong> {{ r.course.title }}</a><div class="sub">{{ r.course.department }} · L{{ r.course.lecture_hours }} T{{ r.course.tutorial_hours }} P{{ r.course.practical_hours }}</div></td>
+    <td>{% for a in r.allocated %}<div>{{ a.faculty.user.display_name }} <span class="sub">{{ a.get_role_display }} {{ a.hours_per_week|floatformat:0 }}h</span></div>{% empty %}<span class="badge warn">none</span>{% endfor %}</td>
+    <td>{% for s in r.suggestions %}<form method="post" class="row" style="gap:.3rem;margin-bottom:.25rem">{% csrf_token %}
+        <input type="hidden" name="course" value="{{ r.course.pk }}"><input type="hidden" name="faculty" value="{{ s.faculty.pk }}"><input type="hidden" name="role" value="theory"><input type="hidden" name="hours" value="{{ r.course.lecture_hours }}">
+        <span>{{ s.faculty.user.display_name }} <span class="sub">{{ s.load.spare|floatformat:0 }}h spare{% if s.reasons %} · {{ s.reasons|join:", " }}{% endif %}</span></span><button class="btn small">Allocate</button></form>
+      {% empty %}<span class="sub">No faculty with spare hours.</span>{% endfor %}</td>
+    <td>{% for s in r.lab_suggestions %}<form method="post" class="row" style="gap:.3rem">{% csrf_token %}
+        <input type="hidden" name="course" value="{{ r.course.pk }}"><input type="hidden" name="faculty" value="{{ s.faculty.pk }}"><input type="hidden" name="role" value="labassist"><input type="hidden" name="hours" value="{{ r.course.practical_hours }}">
+        <span>{{ s.faculty.user.display_name }}</span><button class="btn small ghost">Assign</button></form>{% empty %}<span class="sub">–</span>{% endfor %}</td>
+  </tr>{% empty %}<tr><td colspan="4" class="empty">No courses in this term.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

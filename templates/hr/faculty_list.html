@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Faculty & staff{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Faculty &amp; staff <span class="sub">({{ rows|length }})</span></h1>
+  <div class="row"><a class="btn" href="{% url 'allocation_board' %}">Workload allocation</a><a class="btn primary" href="{% url 'faculty_new' %}">+ Add staff</a></div></div>
+{% include "includes/console_nav.html" with ctab="hr" %}
+<div class="grid cols-4" style="margin-bottom:1rem">
+  <div class="card"><div class="stat">{{ staffing.teaching }}</div><div class="stat-label">teaching · {{ staffing.lab_staff }} lab/technical</div></div>
+  <div class="card"><div class="stat">{{ staffing.cadre.professor }}:{{ staffing.cadre.associate }}:{{ staffing.cadre.assistant }}</div><div class="stat-label">Prof : Assoc : Asst (AICTE 1:2:6)</div></div>
+  <div class="card"><div class="stat">{{ staffing.phd_percent|pct:0 }}</div><div class="stat-label">faculty with Ph.D.</div></div>
+  <div class="card"><div class="stat">{{ staffing.required_faculty }}</div><div class="stat-label">faculty needed at AICTE 1:20</div></div>
+</div>
+<form method="get" class="row" style="margin-bottom:.8rem">
+  <select name="dept"><option value="">All departments</option>{% for d in departments %}<option value="{{ d.pk }}" {% if filters.dept == d.pk|stringformat:"s" %}selected{% endif %}>{{ d.name }}</option>{% endfor %}</select>
+  <select name="type"><option value="">Teaching &amp; lab</option>{% for k, v in types %}<option value="{{ k }}" {% if filters.type == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <select name="load"><option value="">Any load</option><option value="over" {% if filters.load == 'over' %}selected{% endif %}>Over norm</option><option value="under" {% if filters.load == 'under' %}selected{% endif %}>Under 75% of norm</option></select>
+  <button class="btn small">Filter</button></form>
+<div class="table-wrap"><table>
+  <tr><th>Name</th><th>Department</th><th>Designation</th><th>Qualification</th><th style="width:22%">Workload vs norm (hrs/week)</th><th class="num">Rating</th></tr>
+  {% for r in rows %}<tr><td><a href="{% url 'faculty_detail' r.f.pk %}">{{ r.f.user.display_name }}</a><div class="sub">{{ r.f.employee_id }} · {{ r.f.get_staff_type_display }}</div></td>
+    <td>{{ r.f.department.code|default:"–" }}</td><td>{{ r.f.get_designation_display }}{% if r.f.employment != 'permanent' %} <span class="badge">{{ r.f.get_employment_display|truncatechars:12 }}</span>{% endif %}</td>
+    <td class="sub">{{ r.f.qualification|truncatechars:40 }}</td>
+    <td><div class="meter"><div class="progress {% if r.load.status == 'ok' %}ok{% endif %}"><span style="width:{% if r.load.percent > 100 %}100{% else %}{{ r.load.percent|floatformat:0 }}{% endif %}%;{% if r.load.status == 'over' %}background:var(--bad){% endif %}"></span></div>
+      <span class="sub">{{ r.load.load|floatformat:0 }}/{{ r.load.norm|floatformat:0 }}</span></div>{% if r.load.status == 'over' %}<span class="badge bad">over norm</span>{% endif %}</td>
+    <td class="num">{{ r.rating|default_if_none:"–" }}</td></tr>
+  {% empty %}<tr><td colspan="6" class="empty">No staff.</td></tr>{% endfor %}
+</table></div>
+<form method="post" action="{% url 'rate_bulk' %}" class="card" style="margin-top:1rem">{% csrf_token %}<h3 style="margin-top:0">Import student-feedback averages</h3>
+  <textarea name="rows" rows="3" class="mono" placeholder="employee_id, score (1-5), responses&#10;FrCRCE-COMP-001, 4.3, 86"></textarea><button class="btn small" style="margin-top:.4rem">Import</button></form>
+{% endblock %}

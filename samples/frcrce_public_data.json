@@ -1,0 +1,1019 @@
+{
+  "_provenance": "IMPORTANT: frcrce.ac.in (and all hosts) were unreachable by WebFetch/curl from this environment (DNS failure / egress proxy 403). All data below was extracted from WebSearch result summaries restricted to frcrce.ac.in, NOT from direct page fetches. Summaries are lossy; several facts conflict across the college's own pages (noted per field). Verify before production seeding.",
+  "as_of": "2026-10-16",
+  "institution": {
+    "official_name": "Fr. Conceicao Rodrigues College of Engineering",
+    "short_name": "Fr. CRCE",
+    "also_known_as": [
+      "Fr. Agnel Bandra",
+      "CRCE"
+    ],
+    "address": "Agnel Ashram, Bandstand, Bandra (West), Mumbai 400050",
+    "city": "Mumbai",
+    "state": "Maharashtra",
+    "pincode": "400050",
+    "year_established": 1984,
+    "trust_management": "Society of St. Francis Xavier, Pilar (Agnel Ashram, Bandra) - Agnel Fathers' technical education complex",
+    "institution_type": "Private, self-financed (unaided)",
+    "affiliating_university": "University of Mumbai",
+    "autonomous": true,
+    "autonomous_since": "2024-25",
+    "autonomous_note": "About Us page: UGC autonomy from AY 2024-25; Computer Engineering page says autonomous curriculum began AY 2023-24 (conflict). Academic Rule Book R2024 effective AY 2024-25.",
+    "aicte_approved": true,
+    "aicte_permanent_id": null,
+    "aicte_application_no_2024_25": "1-43657020428",
+    "naac_grade": "A",
+    "naac_cgpa": 3.18,
+    "nba_accredited_programs": [
+      {
+        "program": "B.Tech Computer Engineering",
+        "status": "Accredited",
+        "since": "2017-18",
+        "valid_upto": "2026-06-30",
+        "note": "NBA page: certificate AY 2023-24 to 2025-26. Renewal after June 2026 not confirmed."
+      },
+      {
+        "program": "B.Tech Electronics and Computer Science (formerly Electronics Engineering)",
+        "status": "Accredited",
+        "since": "2017-18",
+        "valid_upto": "2028-12-31",
+        "note": "NBA page lists new cycle 2026-01-01 to 2028-12-31; mandatory disclosure 2025-26 says upto 2026-06-30. Earlier certificate Sept 2017-Aug 2023."
+      },
+      {
+        "program": "B.E. Production Engineering (discontinued)",
+        "status": "Expired",
+        "since": null,
+        "valid_upto": null
+      }
+    ],
+    "nba_not_accredited": [
+      "Mechanical Engineering (per Mandatory Disclosure 2025-26)",
+      "Computer Science and Engineering (new, 2024-25)"
+    ],
+    "website": "https://frcrce.ac.in",
+    "leadership": {
+      "director": "Rev. Fr. Valerian D'Souza (Local Superior, Director)",
+      "assistant_director": "Rev. Fr. Trevor Pereira",
+      "principal": "Dr. Sapna Uday Prabhu",
+      "principal_note": "Mandatory Disclosure 2025-26 and 2026 brochure name Dr. Sapna Prabhu as Principal; About Us page says 'In-charge Principal'. Earlier documents (2024-25 rule book) name Dr. Surendra Singh Rathod as Principal.",
+      "dean_academics": "Dr. Deepak Bhoir",
+      "dean_research_and_development": "Dr. Paramjit Thakur (per Mechanical dept page; MD 2025-26 entry truncated in search)"
+    }
+  },
+  "programs": [
+    {
+      "name": "B.Tech Computer Engineering",
+      "code": "COMP",
+      "level": "UG",
+      "department": "Computer Engineering",
+      "intake": 180,
+      "intake_note": "Prospectus 2025 and Computer Engg page (2024) give 180; MD 2025-26 seat table shows 120 (internal conflict); older institute page 120.",
+      "year_started": null,
+      "nba": "Accredited since 2017-18, valid upto 30-06-2026",
+      "duration_years": 4
+    },
+    {
+      "name": "B.Tech Computer Science and Engineering",
+      "code": "CSE",
+      "level": "UG",
+      "department": "Computer Science and Engineering",
+      "intake": 180,
+      "intake_note": "Started 2024-25 with 60; increased to 180 from 2025-26 (CSE page, brochure).",
+      "year_started": "2024-25",
+      "nba": "Not accredited",
+      "duration_years": 4
+    },
+    {
+      "name": "B.Tech Electronics and Computer Science",
+      "code": "ECS",
+      "level": "UG",
+      "department": "Electronics and Computer Science",
+      "intake": 60,
+      "year_started": null,
+      "nba": "Accredited (see institution.nba_accredited_programs)",
+      "duration_years": 4
+    },
+    {
+      "name": "B.Tech Mechanical Engineering",
+      "code": "MECH",
+      "level": "UG",
+      "department": "Mechanical Engineering",
+      "intake": 60,
+      "year_started": null,
+      "nba": "Not accredited (MD 2025-26)",
+      "duration_years": 4
+    },
+    {
+      "name": "M.Tech Computer Engineering",
+      "code": "MTECH-COMP",
+      "level": "PG",
+      "department": "Computer Engineering",
+      "intake": 18,
+      "year_started": null,
+      "nba": null,
+      "duration_years": 2
+    },
+    {
+      "name": "B.E. Artificial Intelligence and Data Science (legacy)",
+      "code": "AIDS",
+      "level": "UG",
+      "department": "Artificial Intelligence and Data Science",
+      "intake": null,
+      "intake_note": "Final-year B.E. AI&DS curriculum and HOD exist on site; not in current admission FAQ list of 4 B.Tech branches - likely being phased out / merged into CSE. Unconfirmed.",
+      "year_started": null,
+      "nba": null,
+      "duration_years": 4,
+      "status": "unclear"
+    },
+    {
+      "name": "B.E. Information Technology (legacy)",
+      "code": "IT",
+      "level": "UG",
+      "department": null,
+      "intake": null,
+      "intake_note": "Mentioned on one site page only; not in current admissions list.",
+      "year_started": null,
+      "nba": null,
+      "duration_years": 4,
+      "status": "unclear"
+    },
+    {
+      "name": "Ph.D.",
+      "code": "PHD",
+      "level": "PhD",
+      "department": null,
+      "intake": null,
+      "intake_note": "Third-party listings mention PhD; no official intake/research-centre details found.",
+      "year_started": null,
+      "nba": null,
+      "duration_years": null,
+      "status": "unconfirmed"
+    }
+  ],
+  "departments": [
+    {
+      "name": "Computer Engineering",
+      "code": "COMP",
+      "hod": "Dr. Sujata Deshmukh",
+      "permanent_faculty_count_md_2025_26": 27,
+      "faculty_list_note": "Only ~14 of 27 names surfaced via search; department page reportedly lists ~30 members. Older HOD Dr. Brijmohan Daga on legacy page.",
+      "faculty": [
+        {
+          "name": "Dr. Sujata Deshmukh",
+          "designation": "Professor & HOD",
+          "qualification": "Ph.D. (Tech.) Information Technology",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Merly Thomas",
+          "designation": "Associate Professor",
+          "qualification": "M.E., Ph.D. (pursuing) Computer Engineering",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Ashok M. Kanthe",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D.",
+          "specialization": "Wireless network security, cyber security, machine learning",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Appears on older faculty page only"
+        },
+        {
+          "name": "Dr. Roshni Padate",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Older staff table lists Assistant Professor"
+        },
+        {
+          "name": "Dr. Smita Ambarkar",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Kalpana Deorukhkar",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Older faculty page lists Assistant Professor"
+        },
+        {
+          "name": "Dr. Vijay Shelake",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Faculty-in-charge, Computer Centre"
+        },
+        {
+          "name": "Mr. Unik Lokhande",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Lab in-charge"
+        },
+        {
+          "name": "Ms. Ashwini Pansare",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Lab in-charge, Analysis of Algorithms lab"
+        },
+        {
+          "name": "Ms. Heenakausar Pendhari",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Lab in-charge, Computer Networks & Security lab"
+        },
+        {
+          "name": "Ms. Prachi Patil",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Parshvi Shah",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Prajakta Dhamnaskar",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Joshua Michael",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        }
+      ],
+      "staff": []
+    },
+    {
+      "name": "Computer Science and Engineering",
+      "code": "CSE",
+      "hod": "Dr. Jagruti Save",
+      "permanent_faculty_count_md_2025_26": 16,
+      "faculty_list_note": "The legacy AI&DS faculty page (heading reads 'Computer Science & Engineering') lists largely the same people; treated here as one CSE/AI&DS faculty group.",
+      "faculty": [
+        {
+          "name": "Dr. Jagruti Save",
+          "designation": "Professor & HOD",
+          "qualification": "Ph.D. (Computer Engineering)",
+          "specialization": "Data mining, image processing, soft computing, machine learning",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Also listed as HOD AI&DS (Academic Cell, AI&DS curriculum)"
+        },
+        {
+          "name": "Dr. Dipali Koshti",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D.",
+          "specialization": "Deep learning, database systems",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "CSE page lists Assistant Professor"
+        },
+        {
+          "name": "Ms. Savita Borole",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Data science, NLP, data mining",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Sarika Davare",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": "Database systems, data warehousing, software engineering, project management",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Garima Tripathi",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "IoT, microprocessors, computer architecture, computer graphics, image processing",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Shraddha Shinde",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "RF and antennas, IoT systems",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Saurabh Kulkarni",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Big data, databases, machine learning, web programming, software testing",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Nawal Dandekar",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Database systems, cyber security, IoT, networks, recommender systems",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Department research coordinator"
+        },
+        {
+          "name": "Dr. Prachi Dalvi",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": "AI/ML, data science",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Vaishali Gaidhane",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Operating systems, databases, machine learning",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Faheem Ansari",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Data analytics, VLSI, IoT and security, RISC-V architectures",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Samrin Pabrekar",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Computer graphics, networks, software engineering, embedded systems",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Afreenzehra Sayed",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Python, networks, web programming",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Sanjose Mary",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": "Python, web development, software testing",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Rohaan Qadeer Khan",
+          "designation": null,
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Saurabh Tejpal",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Listed on AI&DS page only"
+        },
+        {
+          "name": "Ms. Dipshri Kale",
+          "designation": "Assistant Professor",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Listed on AI&DS page only"
+        }
+      ],
+      "staff": []
+    },
+    {
+      "name": "Artificial Intelligence and Data Science",
+      "code": "AIDS",
+      "hod": "Dr. Jagruti Save",
+      "faculty": [],
+      "staff": [],
+      "note": "Legacy department; its faculty page duplicates CSE faculty (see CSE). Kept empty to avoid double-seeding."
+    },
+    {
+      "name": "Electronics and Computer Science",
+      "code": "ECS",
+      "hod": "Dr. Swapnali Makdey",
+      "hod_note": "About Us (2026) and dept page list Dr. Swapnali Makdey as HOD; earlier documents list Dr. Sapna Prabhu (now Principal).",
+      "permanent_faculty_count_md_2025_26": 11,
+      "faculty": [
+        {
+          "name": "Dr. Sapna Prabhu",
+          "designation": "Professor (Principal)",
+          "qualification": "Ph.D. (Electronics Engineering)",
+          "specialization": "Microprocessor system design, embedded systems, IoT",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Former HOD; now Principal"
+        },
+        {
+          "name": "Dr. Deepak Bhoir",
+          "designation": "Professor & Dean Academics",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Swapnali Makdey",
+          "designation": "Associate Professor & HOD",
+          "qualification": "Ph.D. (VLSI Design), VNIT Nagpur",
+          "specialization": "VLSI design",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "One page lists Professor & Dean Academics (conflict)"
+        },
+        {
+          "name": "Dr. K. Sailakshmi Parvathi",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D. (Technology)",
+          "specialization": "Metamaterials, signals and systems, IoT",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Vaibhav Godbole",
+          "designation": "Assistant Professor",
+          "qualification": "M.E., Ph.D. (pursuing) Electronics & Communication Engineering",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Binsy Joseph",
+          "designation": "Assistant Professor",
+          "qualification": "M.E., Ph.D. (pursuing)",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Archana Lopes",
+          "designation": "Assistant Professor",
+          "qualification": "M.E., Ph.D. (pursuing)",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Jayen Modi",
+          "designation": "Assistant Professor",
+          "qualification": "M.E., Ph.D. (pursuing)",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Prajakta Bhangale",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D. (Computer Engineering)",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Older page: M.E., pursuing Ph.D."
+        },
+        {
+          "name": "Dr. Inderkumar Kochar",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Susmita Biswas",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "CV says joined Jan 2026"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Ms. Pradnya Nandlaskar",
+          "designation": "Supporting Staff (Computing Lab 1 / Hardware Lab 2)",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "lab"
+        }
+      ]
+    },
+    {
+      "name": "Mechanical Engineering",
+      "code": "MECH",
+      "hod": "Dr. Vasim Shaikh",
+      "hod_note": "Dept page / About Us 2026 / MD 2025-26 name Dr. Vasim Shaikh as HOD; older Academic Cell page and 2024-25 documents name Dr. Bhushan Patil.",
+      "permanent_faculty_count_md_2025_26": 15,
+      "faculty": [
+        {
+          "name": "Dr. Vasim Shaikh",
+          "designation": "Associate Professor & HOD",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Designation varies (Professor / Associate Professor) across pages"
+        },
+        {
+          "name": "Dr. Bhushan Patil",
+          "designation": "Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Former HOD"
+        },
+        {
+          "name": "Dr. Sunil K. Das",
+          "designation": "Associate Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Another snippet: Assistant Professor & Deputy HOD"
+        },
+        {
+          "name": "Dr. Ketaki Joshi",
+          "designation": "Assistant Professor & Deputy HOD",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Abhijit Tanksale",
+          "designation": "Assistant Professor & Program Coordinator",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Paramjit Thakur",
+          "designation": "Assistant Professor & Dean - Research and Development",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Nitisha Achmelwar",
+          "designation": "Assistant Professor",
+          "qualification": "M.E.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Anant Tarase",
+          "designation": "Assistant Professor",
+          "qualification": "M.E.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Amit Kamble",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Graham Koyeerath",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Dept R&D coordinator"
+        },
+        {
+          "name": "Mr. Onkar Potadar",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D. (pursuing)",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Mr. Sagar A. Dhotare",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D. (pursuing)",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. M. VeeraBhadraRao",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Dipali K. Bhise",
+          "designation": "Assistant Professor",
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching",
+          "note": "Another snippet lists Professor of Practice"
+        },
+        {
+          "name": "Mr. Mayur Aggarwal",
+          "designation": "Professor of Practice",
+          "qualification": "M.S.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Mr. Deepak Gaikwad",
+          "designation": null,
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "non-teaching"
+        },
+        {
+          "name": "Mr. Santosh Dharman",
+          "designation": null,
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "non-teaching"
+        }
+      ]
+    },
+    {
+      "name": "Humanities and Science (First Year)",
+      "code": "HS",
+      "hod": "Dr. Hemant Khanolkar",
+      "hod_note": "Dept page and MD 2025-26 name Dr. Khanolkar; older Academic Cell page names Mr. Dileep C.C.; 2024-25 FE timetable names Dr. S.S. Rathod.",
+      "permanent_faculty_count_md_2025_26": 12,
+      "faculty_list_note": "Only 4 of 12 names surfaced.",
+      "faculty": [
+        {
+          "name": "Dr. Hemant Khanolkar",
+          "designation": "Assistant Professor & HOD",
+          "qualification": "Ph.D. (Chemistry)",
+          "specialization": "Chemistry",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Gauree Jagushte",
+          "designation": "Assistant Professor",
+          "qualification": "M.Sc. (Mathematics), B.Ed.",
+          "specialization": "Mathematics",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Ms. Annivia Pereira",
+          "designation": "Assistant Professor",
+          "qualification": "M.A. (English), Ph.D. (pursuing)",
+          "specialization": "English / Communication skills",
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        },
+        {
+          "name": "Dr. Kajal Kumari",
+          "designation": null,
+          "qualification": "Ph.D.",
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "teaching"
+        }
+      ],
+      "staff": [
+        {
+          "name": "Mr. Ajit Kamble",
+          "designation": "Laboratory Technician",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "lab"
+        },
+        {
+          "name": "Ms. Jyoti Vishwakarma",
+          "designation": "Laboratory Attendant",
+          "qualification": null,
+          "specialization": null,
+          "experience_years": null,
+          "joining_date": null,
+          "staff_type": "lab"
+        }
+      ]
+    }
+  ],
+  "fees": {
+    "fra_approved": true,
+    "fra_body": "Fees Regulating Authority (FRA), Maharashtra",
+    "entries": [
+      {
+        "academic_year": "2025-26",
+        "program": "All B.Tech (UG)",
+        "category": "General / Open",
+        "tuition_fee": 173043,
+        "development_fee": 25957,
+        "other_fee": null,
+        "total": 199000,
+        "status": "FRA approved",
+        "source": "FRA fee proposal 2025-26 PDF (approved row)"
+      },
+      {
+        "academic_year": "2026-27",
+        "program": "First Year B.Tech",
+        "category": "General / Open",
+        "tuition_fee": null,
+        "development_fee": null,
+        "other_fee": "University processing fees extra",
+        "total": 215000,
+        "status": "FRA sanctioned (admission FAQ)",
+        "note": "Tuition fee stated to remain same through 4 years of study. College's 2026-27 proposal to FRA was Rs 2,17,876."
+      }
+    ],
+    "development_fee_rule": "12% of tuition, capped at 15% of tuition (FRA computation)",
+    "pg_fees": null,
+    "category_wise_fees": null
+  },
+  "academic_rules": {
+    "scheme": "Autonomous Academic Rule Book R2024 (effective AY 2024-25); syllabus revisions FRCRCE-1-24, FRCRCE-3-26",
+    "assessment_components_theory": {
+      "ISE1_plus_ISE2": "20 marks total (e.g. 10+10 or 15+5; varies by course)",
+      "MSE": "30 marks, 90 min (some courses 15 marks, 1 hr); covers ~40-50% syllabus",
+      "ESE": "100-mark, 3-hour paper scaled to its weightage; some lab courses use practical/oral"
+    },
+    "weightage_note": "Exact ISE/MSE/ESE weightage percentages not confirmed; one snippet mentions ESE 30% weightage - unverified.",
+    "passing_criteria": "Absolute grading; minimum 40% (UG) / 45% (PG) aggregate of ISE1+MSE+ISE2+ESE; no separate head-wise passing; no grace marks",
+    "attendance_requirement_percent": 75,
+    "attendance_rules": "<75% in a theory course: not eligible for MSE/ESE; 50-75%: detained, may only appear in Special Examination; practical-only course <75% = defaulter",
+    "grade_penalties": "Special Exam: one-grade penalty; Re-exam: one-grade penalty, capped at B",
+    "promotion_rules": "No restriction odd->even semester; FY->SY requires >=50% of FY credits earned; later years stricter (details not captured)",
+    "grading_scale": "10-point CGPA (grade table not captured)",
+    "cgpa_to_percentage": "Percentage = (CGPA - 0.75) x 10",
+    "credit_structure": null,
+    "academic_calendar_2026_27": {
+      "document": "https://frcrce.ac.in/wp-content/uploads/2026/06/Academic_Calendar_2026-27_Final.pdf",
+      "term_start": null,
+      "term_end": null,
+      "known_dates": {
+        "crescendo_tech_fest": "2026-10-22 to 2026-10-25",
+        "sports_day": "2027-01-09",
+        "odd_sem_ESE_SE_TE_BE": "November 2026 (exact dates not captured)",
+        "ATKT_exam": "December 2026"
+      }
+    },
+    "other_rule_books": [
+      "https://frcrce.ac.in/wp-content/uploads/2025/11/Manual_for_Degree_Options_2025_26-revised.pdf (minors/honours)",
+      "https://frcrce.ac.in/wp-content/uploads/2025/11/Rule_Book_training_internships_placement_2024_25.pdf",
+      "Student Activities Rule Book 2024-25"
+    ]
+  },
+  "other": {
+    "permanent_faculty_by_dept_md_2025_26": {
+      "COMP": 27,
+      "ECS": 11,
+      "MECH": 15,
+      "CSE": 16,
+      "HS": 12
+    },
+    "student_faculty_ratio": "18:1 (permanent faculty, MD 2025-26)",
+    "student_strength": null,
+    "placements": null,
+    "legacy_programs": [
+      "B.E. Production Engineering (60, discontinued)",
+      "M.E. Electronics Engineering (18, legacy)",
+      "PG Mechanical course closure noted in AICTE 2024-25 approval"
+    ]
+  },
+  "sources": [
+    {
+      "url": "https://frcrce.ac.in/",
+      "note": "Home (via search snippets only)"
+    },
+    {
+      "url": "https://frcrce.ac.in/about-us/",
+      "note": "Est. 1984, NAAC A, NBA since 2017, UGC autonomy 2024-25, director/principal"
+    },
+    {
+      "url": "https://frcrce.ac.in/frcrce-admission/",
+      "note": "4 B.Tech branches, 2026-27 fee Rs 2,15,000"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/simple-file-list/mandatorydisclosure.pdf",
+      "note": "Mandatory Disclosure 2025-26: address, trust, principal, intake, faculty counts, NAAC CGPA"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/2025/11/crce-prospectus-2025new.pdf",
+      "note": "Prospectus 2025: intakes, fee"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/2026/08/FrCRCE_brochure.pdf",
+      "note": "Brochure Aug 2026: principal, CSE intake history"
+    },
+    {
+      "url": "https://frcrce.ac.in/nba/",
+      "note": "NBA validity table"
+    },
+    {
+      "url": "https://frcrce.ac.in/computer-engineering/",
+      "note": "COMP faculty"
+    },
+    {
+      "url": "http://www.frcrce.ac.in/index.php/crce-department/comp-engg/faculty-compengg",
+      "note": "Older COMP faculty list"
+    },
+    {
+      "url": "https://frcrce.ac.in/computer-science-and-engineering/",
+      "note": "CSE faculty"
+    },
+    {
+      "url": "http://www.frcrce.ac.in/index.php/crce-department/ai-ds/faculty-ai-ds",
+      "note": "AI&DS faculty (duplicates CSE)"
+    },
+    {
+      "url": "https://frcrce.ac.in/electronics-and-computer-science/",
+      "note": "ECS faculty"
+    },
+    {
+      "url": "https://frcrce.ac.in/index.php/crce-department/elex-compsci/our-people/teaching-faculty",
+      "note": "ECS teaching faculty (older)"
+    },
+    {
+      "url": "https://frcrce.ac.in/mechanical-enginnering/",
+      "note": "MECH faculty and supporting staff"
+    },
+    {
+      "url": "https://frcrce.ac.in/science-and-humanities/",
+      "note": "H&S faculty and lab staff"
+    },
+    {
+      "url": "http://www.frcrce.ac.in/index.php/about-us/administration/academic-cell",
+      "note": "HOD list (older)"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/2026/01/FeeProposal_2026-27.pdf",
+      "note": "FRA 2026-27 proposal"
+    },
+    {
+      "url": "http://www.frcrce.ac.in/attachments/article/642/FeeProposal202526.pdf",
+      "note": "FRA 2025-26 approved fee"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/2025/11/Academic_Rule_Book_FrCRCE_2024_25.pdf",
+      "note": "Academic Rule Book R2024: passing, attendance, promotion"
+    },
+    {
+      "url": "https://frcrce.ac.in/examination/",
+      "note": "ISE/MSE/ESE process"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/2026/06/Academic_Calendar_2026-27_Final.pdf",
+      "note": "Academic calendar 2026-27 (partial)"
+    },
+    {
+      "url": "https://frcrce.ac.in/wp-content/uploads/2025/11/AICTE_Approval_2024-25.pdf",
+      "note": "AICTE approval 2024-25 application no."
+    }
+  ],
+  "gaps": [
+    "Network: WebFetch and curl could not reach frcrce.ac.in (DNS ENOTFOUND / proxy 403). No page or PDF was fetched directly; everything comes from WebSearch summaries.",
+    "AICTE permanent ID not found.",
+    "Computer Engineering faculty list incomplete (14 of 27 permanent faculty); H&S incomplete (4 of 12); CSE/ECS counts roughly match MD.",
+    "experience_years and joining_date not captured for any faculty (only S. Biswas joining Jan 2026 noted).",
+    "Non-teaching/lab staff mostly missing for COMP and CSE; designations missing for MECH supporting staff.",
+    "Conflicting HOD/designation data across college pages (MECH, ECS, H&S, Principal) - latest-dated source chosen, conflicts noted per entry.",
+    "COMP intake conflict (180 vs 120).",
+    "Year started not found for any program except CSE (2024-25).",
+    "Category-wise fees (SC/ST/OBC/EBC), PG fees, other/exam fees not found.",
+    "Grade-point table, credit structure per semester, exact ISE/MSE/ESE weightage, detailed ATKT/promotion rules not captured.",
+    "Academic calendar 2026-27 term start/end dates not captured.",
+    "PhD programme / research centre details not found.",
+    "Student strength per year, NIRF data, placement summary not found.",
+    "Status of AI&DS and IT programmes (legacy vs. active) unclear."
+  ]
+}

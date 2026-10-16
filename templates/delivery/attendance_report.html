@@ -2,7 +2,7 @@
 {% block content %}
 <div class="page-head">
   <div><h2 style="margin:0">Attendance</h2><p class="sub">{{ sessions|length }} delivered sessions. P = present, A = absent, L = late, E = excused/OD (late and OD count as present).</p></div>
-  {% if request.is_course_teacher %}<a class="btn" href="?format=csv">Export CSV</a>{% endif %}
+  {% if request.is_course_teacher %}<div class="row"><a class="btn" href="{% url 'course_biometric' course.pk %}">Compare with biometric</a><a class="btn" href="?format=csv">Export CSV</a></div>{% endif %}
 </div>
 <div class="table-wrap"><table class="matrix">
   <tr><th>Student</th><th>%</th>{% for s in sessions %}<th title="{{ s.plan_item.title }}"><a href="{% url 'session_detail' course.pk s.pk %}">{{ s.date|date:"j/n" }}</a></th>{% endfor %}</tr>
