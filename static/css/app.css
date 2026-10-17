@@ -223,6 +223,7 @@ table.cie td.bucket { background: var(--surface-2); font-weight: 600; }
   .nav-toggle { display: inline-block; order: -1; }
   .topbar .inner { gap: .5rem; padding: .5rem .75rem; }
   .brand { white-space: nowrap; font-size: 1rem; }
+  .topbar nav .btn { white-space: nowrap; }
   .topbar nav { flex-wrap: nowrap; gap: .5rem; min-width: 0; }
   .topbar nav > a[href*="profile"], .topbar nav .badge { display: none; }
   .term-chip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 9.5rem; }
