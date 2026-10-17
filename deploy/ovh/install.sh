@@ -83,6 +83,13 @@ if [ "$FIRST_RUN" = 1 ]; then
 fi
 
 echo "==> Configuring services"
+# Some VPS images ship a web server on ports 80/443, which would stop Caddy from getting a certificate.
+for svc in apache2 nginx httpd lighttpd; do
+  if systemctl is-active --quiet "$svc" 2>/dev/null; then
+    echo "    stopping $svc (it holds port 80/443; Caddy serves the site)"
+    systemctl disable --now "$svc" >/dev/null 2>&1 || true
+  fi
+done
 cat > /etc/systemd/system/campusflow.service <<EOF
 [Unit]
 Description=CampusFlow LMS (gunicorn)
