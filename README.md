@@ -31,6 +31,29 @@ Run the tests with `python manage.py test`.
 
 This test setup uses SQLite on the instance disk, so data resets whenever the service redeploys or restarts. Free instances also sleep when idle. For real use, switch to PostgreSQL and object storage for uploads. A `Procfile` is included for Railway/Heroku-style hosts.
 
+## Deploy on an OVHcloud VPS
+
+`deploy/ovh/install.sh` installs everything on an Ubuntu 22.04/24.04 or Debian 12 VPS:
+- gunicorn under systemd;
+- Caddy, with an automatic Let's Encrypt certificate;
+- a firewall;
+- a nightly SQLite backup;
+- demo and FRCRCE data on first install.
+
+```bash
+ssh ubuntu@<vps-ip>
+curl -fsSL https://raw.githubusercontent.com/mayuraggarwal7/LMS/main/deploy/ovh/install.sh -o install.sh
+sudo bash install.sh                          # → https://<ip-with-dashes>.sslip.io (no domain needed)
+sudo DOMAIN=lms.yourcollege.edu bash install.sh   # own domain: point its A record at the VPS first
+```
+
+Options:
+- `BRANCH=...` deploys a branch other than `main`.
+- `REPO_URL=https://<token>@github.com/mayuraggarwal7/LMS.git` is needed if the repository is private.
+- `DEMO=0` loads the FRCRCE data without demo users.
+
+Re-run the script to update; the database in `/var/lib/campusflow` is kept. Settings live in `/etc/campusflow.env`. Logs: `journalctl -u campusflow`.
+
 ## What the teacher does and what the system does
 
 | Step | Teacher | CampusFlow |
