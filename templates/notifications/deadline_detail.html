@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ d.title }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><div class="sub"><a href="{% url 'deadlines' %}">Deadlines</a></div><h1>{{ d.title }}</h1>
+  <p class="sub">{{ d.get_kind_display }}{% if d.component_kind %} ({{ d.component_kind }}){% endif %} · {{ d.get_audience_display }}
+  {% if d.due_at %} · due {{ d.due_at|date:"D d M Y, H:i" }}{% endif %}</p></div>
+  {% if rep.total %}<div class="stat"><div class="stat-label">Done</div><strong style="font-size:1.6rem">{{ rep.done }}/{{ rep.total }}</strong></div>{% endif %}
+</div>
+
+<div class="table-wrap"><table>
+  {% if rep.by_course %}
+  <tr><th>Course</th><th>Teacher(s)</th><th>Status</th></tr>
+  {% for r in rep.rows %}<tr><td><strong>{{ r.course.code }}</strong> {{ r.course.title }}<div class="sub">Year {{ r.course.year }} · Sem {{ r.course.semester }}{% if r.course.division %} · Div {{ r.course.division }}{% endif %}</div></td>
+    <td>{% for p in r.people %}{{ p.display_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+    <td>{% if r.done %}<span class="badge ok">Done</span>{% elif d.overdue %}<span class="badge bad">Overdue</span>{% else %}<span class="badge warn">Pending</span>{% endif %} <span class="sub">{{ r.detail }}</span></td></tr>
+  {% empty %}<tr><td class="empty">No courses match (check the department, programme, year and term filters).</td></tr>{% endfor %}
+  {% else %}
+  <tr><th>Person</th><th>Status</th></tr>
+  {% for r in rep.rows %}<tr><td>{{ r.user.display_name }} <span class="sub">{{ r.user.username }}</span></td>
+    <td>{% if r.done %}<span class="badge ok">{% if d.kind == 'notice' %}Read{% else %}Done{% endif %}</span> <span class="sub">{{ r.done_at|date:"d M H:i" }}</span>{% else %}<span class="badge warn">Pending</span>{% endif %}</td></tr>
+  {% empty %}<tr><td class="empty">Nobody matches this audience.</td></tr>{% endfor %}
+  {% endif %}
+</table></div>
+
+<section class="card" style="margin-top:1.4rem">
+  <h2 style="margin-top:0">Edit</h2>
+  <form method="post">{% csrf_token %}
+    <div class="form-grid">{% include "includes/form_fields.html" with form=form %}</div>
+    <div class="row" style="margin-top:.8rem"><button class="btn primary">Save</button>
+      <button class="btn danger" name="action" value="delete" formnovalidate data-confirm="Delete this deadline?">Delete</button></div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Notifications</h1>
+    <p class="sub">Things that need your attention. Items clear by themselves once the work is done.</p></div>
+  <form method="post" class="row">{% csrf_token %}<input type="hidden" name="action" value="read_all">
+    {% if user.is_staff %}<a class="btn" href="{% url 'deadlines' %}">🗓 Deadlines timetable</a>{% endif %}
+    <button class="btn ghost">Mark all as read</button></form>
+</div>
+
+{% if categories %}<nav class="chips">
+  <a class="{% if not cat %}active{% endif %}" href="?">All</a>
+  {% for c, label in categories %}<a class="{% if cat == c %}active{% endif %}" href="?cat={{ c }}">{{ label }}</a>{% endfor %}
+</nav>{% endif %}
+
+<div class="grid cols-2" style="align-items:start">
+<section class="card">
+  <div class="row between"><h2 style="margin-top:0">Needs attention</h2>
+    {% if counts.urgent %}<span class="badge bad">{{ counts.urgent }} overdue</span>{% endif %}</div>
+  {% for n in attention %}
+  <div class="notif {{ n.level }}{% if not n.read_at %} unread{% endif %}">
+    <span class="notif-dot" title="{{ n.get_level_display }}"></span>
+    <div class="notif-main">
+      <a href="{% url 'notification_go' n.pk %}" class="notif-title">{{ n.title }}</a>
+      <div class="sub">{{ n.body }}</div>
+      <div class="notif-meta"><span class="badge {% if n.level == 'urgent' %}bad{% elif n.level == 'warn' %}warn{% else %}info{% endif %}">{% if n.level == 'info' %}Upcoming{% else %}{{ n.get_level_display }}{% endif %}</span>
+        <span class="sub">{{ n.get_category_display }} · {{ n.updated_at|timesince }} ago</span></div>
+    </div>
+    {% if n.key|slice:":3" == "dl:" and n.category == "deadline" and ":" not in n.key|slice:"3:" %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="ack"><input type="hidden" name="deadline" value="{{ n.key|slice:'3:' }}">
+        <button class="btn small">Mark done</button></form>
+    {% elif not n.read_at %}
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="read"><input type="hidden" name="id" value="{{ n.pk }}">
+        <button class="btn small ghost" title="Mark as read">✓</button></form>
+    {% endif %}
+  </div>
+  {% empty %}<p class="empty">🎉 Nothing needs your attention right now.</p>{% endfor %}
+</section>
+
+<div class="stack">
+  {% if my_deadlines %}
+  <section class="card">
+    <h2 style="margin-top:0">My deadlines</h2>
+    <p class="sub">Set by the administration. Exam papers, marks, attendance, plans and grading are checked automatically.</p>
+    {% for r in my_deadlines %}
+    <div class="deadline-row" id="deadline-{{ r.d.pk }}">
+      <div class="row between">
+        <strong>{{ r.d.title }}</strong>
+        {% if r.done %}<span class="badge ok">Done</span>{% elif r.d.overdue %}<span class="badge bad">Overdue</span>{% else %}<span class="badge warn">Open</span>{% endif %}
+      </div>
+      <div class="sub">{% if r.d.due_at %}Due {{ r.d.due_at|date:"D d M Y, H:i" }}{% endif %}{% if r.d.description %} · {{ r.d.description|truncatechars:120 }}{% endif %}</div>
+      {% if r.courses %}<ul class="checklist">{% for c, done, detail in r.courses %}
+        <li>{% if done %}✅{% else %}⬜{% endif %} <a href="{% url 'course_detail' c.pk %}">{{ c.code }}</a> <span class="sub">{{ detail }}</span></li>{% endfor %}</ul>
+      {% elif not r.done %}
+        <form method="post" class="row" style="margin-top:.3rem">{% csrf_token %}<input type="hidden" name="action" value="ack"><input type="hidden" name="deadline" value="{{ r.d.pk }}">
+          <button class="btn small primary">Mark done</button></form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
+  <section class="card">
+    <h2 style="margin-top:0">Updates</h2>
+    {% for n in updates %}
+    <div class="notif info{% if not n.read_at %} unread{% endif %}">
+      <span class="notif-dot"></span>
+      <div class="notif-main"><a href="{% url 'notification_go' n.pk %}" class="notif-title">{{ n.title }}</a>
+        <div class="sub">{{ n.body }}{% if n.body %} · {% endif %}{{ n.updated_at|timesince }} ago</div></div>
+      <form method="post">{% csrf_token %}<input type="hidden" name="action" value="{% if n.key|slice:':3' == 'dl:' %}ack{% else %}dismiss{% endif %}">
+        <input type="hidden" name="id" value="{{ n.pk }}"><input type="hidden" name="deadline" value="{{ n.key|slice:'3:' }}">
+        <button class="btn small ghost" title="Dismiss">✕</button></form>
+    </div>
+    {% empty %}<p class="empty">No new updates.</p>{% endfor %}
+  </section>
+
+  {% if history %}
+  <details class="card"><summary><strong>Recently cleared</strong> <span class="sub">({{ history|length }})</span></summary>
+    {% for n in history %}<div class="notif done"><span class="notif-dot"></span><div class="notif-main"><span class="notif-title">{{ n.title }}</span>
+      <div class="sub">Cleared {{ n.resolved_at|timesince }} ago</div></div></div>{% endfor %}
+  </details>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

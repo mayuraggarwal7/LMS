@@ -22,6 +22,7 @@
     <a href="{% url 'admin_console' %}" class="{% if u == 'admin_console' or u == 'institution_edit' %}active{% endif %}"><span class="ico">🏛</span>Overview</a>
     <a href="{% url 'departments' %}" class="{% if u == 'departments' or u == 'program_new' or u == 'program_detail' or u == 'program_edit' %}active{% endif %}"><span class="ico">🧭</span>Departments &amp; branches</a>
     <a href="{% url 'rules' %}" class="{% if u == 'rules' %}active{% endif %}"><span class="ico">📜</span>Rules</a>
+    <a href="{% url 'deadlines' %}" class="{% if u == 'deadlines' or u == 'deadline_detail' %}active{% endif %}"><span class="ico">🗓</span>Deadlines timetable</a>
     <a href="{% url 'aicte_report' %}" class="{% if u == 'aicte_report' %}active{% endif %}"><span class="ico">✔️</span>AICTE compliance</a>
   </div>
   <div class="nav-group">

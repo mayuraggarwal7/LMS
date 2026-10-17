@@ -15,7 +15,8 @@
     <button class="nav-toggle" type="button" aria-label="Menu" aria-controls="sidebar" aria-expanded="false" data-nav-toggle>☰</button>
     <nav>
       <a class="term-chip" href="{% url 'term_switch' %}?next={{ request.path|urlencode }}" title="Switch term">
-        {% if current_term %}<span class="term-badge term-{{ current_term.kind }}">{{ current_term.badge }}</span>{{ current_term.name }}{% else %}All terms{% endif %} ▾</a>
+        {% if current_term %}<span class="term-badge term-{{ current_term.kind }}">{{ current_term.badge }}</span><span class="term-name">{{ current_term.name }}</span>{% else %}<span class="term-name">All terms</span>{% endif %} ▾</a>
+      <a class="bell" href="{% url 'notification_center' %}" title="Notifications" aria-label="Notifications{% if notif_unread %}: {{ notif_unread }} new{% endif %}">🔔{% if notif_unread %}<span class="count">{{ notif_unread }}</span>{% endif %}</a>
       <a href="{% url 'profile' %}">{{ user.display_name }}</a>
       <span class="badge">{{ user.get_role_display }}</span>
       <form class="inline" method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn small ghost">Log out</button></form>

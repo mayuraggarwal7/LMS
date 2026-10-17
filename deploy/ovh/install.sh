@@ -60,11 +60,13 @@ DJANGO_DEBUG=0
 DJANGO_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_urlsafe(50))')
 DJANGO_ALLOWED_HOSTS=$DOMAIN,$IP,localhost,127.0.0.1
 DJANGO_HTTPS=1
+LMS_SITE_URL=https://$DOMAIN
 LMS_SQLITE_PATH=$DATA_DIR/db.sqlite3
 LMS_MEDIA_ROOT=$DATA_DIR/media
 LMS_SERVE_MEDIA=1
 LMS_TIME_ZONE=Asia/Kolkata
 # ANTHROPIC_API_KEY=   (optional: Claude-assisted syllabus parsing and question generation)
+# EMAIL_HOST=smtp.example.com  EMAIL_HOST_USER=...  EMAIL_HOST_PASSWORD=...  DEFAULT_FROM_EMAIL=...  (optional: hourly email digests)
 EOF
   chmod 640 "$ENV_FILE"
   chgrp "$APP_USER" "$ENV_FILE"
@@ -124,6 +126,15 @@ systemctl enable -q --now campusflow
 systemctl restart campusflow
 systemctl enable -q caddy
 systemctl restart caddy
+
+# refresh everyone's notification centre every hour (and email digests when EMAIL_HOST is set in the env file)
+cat > /etc/cron.hourly/campusflow-notify <<EOF
+#!/bin/sh
+EMAIL_FLAG=""
+grep -q '^EMAIL_HOST=' $ENV_FILE && EMAIL_FLAG="--email"
+su -s /bin/sh $APP_USER -c "set -a; . $ENV_FILE; set +a; cd $APP_DIR && .venv/bin/python manage.py notify \$EMAIL_FLAG" >/dev/null 2>&1
+EOF
+chmod +x /etc/cron.hourly/campusflow-notify
 
 # nightly database backup, 14 days kept
 cat > /etc/cron.daily/campusflow-backup <<EOF

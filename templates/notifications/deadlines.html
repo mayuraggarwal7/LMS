@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Deadlines{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Deadlines timetable</h1>
+  <p class="sub">Set when exam papers, marks, attendance, plans or other tasks are due. Each person sees their items in their notification centre:
+  "due soon" from the reminder day, "overdue" after the deadline. Exam papers, marks, attendance, learning plans and grading are checked automatically for every matching course.</p></div></div>
+
+<div class="table-wrap"><table>
+  <tr><th>Due</th><th>Task</th><th>Applies to</th><th>Progress</th><th></th></tr>
+  {% for r in rows %}{% with d=r.d %}<tr{% if not d.active %} style="opacity:.55"{% endif %}>
+    <td style="white-space:nowrap">{% if d.due_at %}{{ d.due_at|date:"D d M Y" }}<div class="sub">{{ d.due_at|date:"H:i" }}</div>{% else %}<span class="sub">—</span>{% endif %}</td>
+    <td><a href="{% url 'deadline_detail' d.pk %}"><strong>{{ d.title }}</strong></a>
+      <div class="sub">{{ d.get_kind_display }}{% if d.component_kind %} · {{ d.component_kind }}{% endif %}{% if not d.active %} · inactive{% endif %}</div></td>
+    <td>{{ d.get_audience_display }}<div class="sub">{{ d.department.name|default:"All departments" }}{% if d.program %} · {{ d.program.code }}{% endif %}{% if d.year %} · Year {{ d.year }}{% endif %}</div></td>
+    <td>{% if r.rep %}{% if r.rep.total %}<div class="meter" style="min-width:150px"><div class="progress {% if r.rep.done == r.rep.total %}ok{% endif %}"><span style="width:{% widthratio r.rep.done r.rep.total 100 %}%"></span></div>
+      <span class="sub">{{ r.rep.done }}/{{ r.rep.total }}</span></div>{% else %}<span class="sub">no matching {% if d.is_auto %}courses{% else %}people{% endif %}</span>{% endif %}
+      {% else %}<span class="sub">notice</span>{% endif %}</td>
+    <td class="right">{% if d.overdue and r.rep and r.rep.done < r.rep.total %}<span class="badge bad">Overdue</span>{% endif %}</td>
+  </tr>{% endwith %}{% empty %}<tr><td colspan="5" class="empty">No deadlines yet. Add the first one below.</td></tr>{% endfor %}
+</table></div>
+
+<section class="card" style="margin-top:1.4rem">
+  <h2 style="margin-top:0">Add a deadline or notice</h2>
+  <form method="post">{% csrf_token %}
+    <div class="form-grid">{% include "includes/form_fields.html" with form=form %}</div>
+    <button class="btn primary" style="margin-top:.8rem">Add</button>
+  </form>
+</section>
+{% endblock %}

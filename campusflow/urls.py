@@ -15,6 +15,7 @@ urlpatterns = [
     path("students/", include("students.urls")),
     path("hr/", include("hr.urls")),
     path("finance/", include("finance.urls")),
+    path("notifications/", include("notifications.urls")),
     path("biometric/", include("biometric.urls")),
     path("api/biometric/punches", biometric_views.api_punches, name="api_punches"),
     path("courses/<int:course_id>/biometric/", biometric_views.course_report, name="course_biometric"),

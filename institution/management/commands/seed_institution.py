@@ -27,6 +27,7 @@ from biometric.models import Device, Punch
 from finance.models import FeeHead, FeeLine, FeeStructure, SalaryStructure
 from finance.services import raise_invoice, record_payment
 from hr.models import Competency, FacultyCompetency, FacultyProfile, FacultyRating, WorkloadAllocation
+from notifications.models import Deadline
 from institution.models import Department, Institution, Program, Regulation, Rule, create_default_aicte_regulation
 from students.models import SemesterRecord, StudentProfile
 
@@ -354,6 +355,26 @@ class Command(BaseCommand):
                             Punch.objects.get_or_create(biometric_id=bid, timestamp=ts, device=device,
                                                         defaults={"person": user, "direction": direction, "source": "demo"})
             day += timedelta(days=1)
+        # demo deadlines timetable for the notification centre
+        def at(days, hour=17):
+            return datetime.combine(today + timedelta(days=days), time(hour, 0), tzinfo=tz)
+        admin_user = User.objects.filter(username="admin").first()
+        for title, kind, comp, due, remind, audience, desc in [
+            ("Submit MSE question papers (DEMO)", Deadline.PAPER, "MSE", at(4), 7, Deadline.TEACHERS,
+             "Upload the paper and set the exam to Scheduled."),
+            ("Attendance up to date for the week (DEMO)", Deadline.ATTENDANCE, "", at(-1, 18), 2, Deadline.TEACHERS, ""),
+            ("Release ISE-1 marks (DEMO)", Deadline.MARKS, "ISE", at(10), 5, Deadline.TEACHERS, ""),
+            ("Submit ESE question papers (DEMO)", Deadline.PAPER, "ESE", at(30), 10, Deadline.TEACHERS, ""),
+            ("Submit course file to HOD (DEMO)", Deadline.CUSTOM, "", at(6), 7, Deadline.ALL_STAFF,
+             "Lesson plan, CO-PO mapping, question papers and result analysis."),
+            ("ESE exam form submission (DEMO)", Deadline.CUSTOM, "", at(12), 10, Deadline.STUDENTS,
+             "Fill in the exam form on the university portal and submit the receipt at the exam cell."),
+            ("Diwali vacation 2-7 November (DEMO)", Deadline.NOTICE, "", None, 0, Deadline.EVERYONE,
+             "The college is closed; classes resume on Monday."),
+        ]:
+            Deadline.objects.get_or_create(title=title, defaults={
+                "kind": kind, "component_kind": comp, "due_at": due, "remind_days": remind, "audience": audience,
+                "description": desc, "created_by": admin_user})
         self.stdout.write(self.style.SUCCESS("DEMO super admin: admin / admin123"))
         self.stdout.write(self.style.SUCCESS(f"DEMO: {made} synthetic students with semester history, invoices and payments; "
                                              f"salary structures, workload, ratings and {Punch.objects.filter(source='demo').count()} punches."))

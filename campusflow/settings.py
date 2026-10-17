@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "hr",
     "finance",
     "biometric",
+    "notifications",
 ]
 
 MIDDLEWARE = [
@@ -74,6 +75,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "courses.context_processors.lms",
+                "notifications.context_processors.notifications",
             ],
         },
     },
@@ -122,6 +124,19 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 20000
 LMS_AI_MODEL = os.environ.get("LMS_AI_MODEL", "claude-opus-5")
 # Minimum attendance percentage before a student is flagged as at-risk.
 LMS_ATTENDANCE_THRESHOLD = 75
+
+# Email for notification digests (python manage.py notify --email). Without EMAIL_HOST, mail goes to the console.
+if os.environ.get("EMAIL_HOST"):
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ["EMAIL_HOST"]
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "CampusFlow <noreply@campusflow.local>")
+LMS_SITE_URL = os.environ.get("LMS_SITE_URL", "")
 # CO attainment: a student "attains" a CO when they score >= the CO target
 # (default 60%). The course attainment level follows the common NBA scale.
 LMS_CO_ATTAINMENT_LEVELS = [(70, 3), (60, 2), (50, 1)]

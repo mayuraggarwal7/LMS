@@ -168,6 +168,21 @@ Staff/superuser accounts get an **Admin console** with these modules.
 - People are matched by roll number / PRN / admission number (students) or biometric id / employee id (staff).
 - Each course's attendance report has **Compare with biometric**. It flags students marked present who were not on campus, and students on campus who were marked absent. Staff reports show classes taught without a punch.
 
+### Notification centre
+Every user has a 🔔 in the top bar and a **Notifications** page. It lists what needs their attention, and each item clears by itself once the work is done:
+- **Teachers:** classes without attendance (overdue after 2 days), submissions waiting for a grade (overdue after 7 days), exams held but marks not released, and draft papers for exams in the coming week.
+- **Students:** assignments due within 3 days or overdue, newly returned grades, attendance below the minimum, exams in the coming week, and fee dues.
+- **Admins:** how many courses or people are still pending on each deadline, and biometric punches not linked to anyone.
+
+**Deadlines timetable** (Admin → Institution) lets admins set dated tasks for groups of users. A task can target a department, programme, year or term. Each item shows as "upcoming", then "due soon" from its reminder day, then "overdue".
+- **Checked automatically per course:** submit an exam paper (by component, e.g. MSE/ESE), enter and release marks, attendance up to date, learning plan and timetable ready, all submissions graded.
+- **Marked done by the user:** other tasks, such as a course file or an exam form.
+- **Notices** go to everyone in the chosen audience.
+
+Each deadline has a page showing every course or person and whether they're done.
+
+`python manage.py notify` refreshes everyone's notifications. Add `--email` to email each user their new due-soon and overdue items; this needs `EMAIL_HOST` and related variables in the environment. The OVH installer runs it hourly.
+
 ### FRCRCE data
 `seed_institution` loads `samples/frcrce_public_data.json`: Fr. Conceicao Rodrigues College of Engineering, Bandra (Mumbai University, autonomous). It contains programmes and intake, departments and HODs, faculty, fees and academic rules gathered from public sources. The `_provenance` and `gaps` fields in the file say what was found and what still needs checking. `--demo` adds synthetic students, payments, payroll and punches, all clearly marked DEMO. The AICTE norm values in the default regulation are the commonly published ones; check them against the current AICTE Approval Process Handbook.
 
@@ -204,5 +219,6 @@ The ESE and TW minimum pass is 40%. Each course can change these on its **Exams 
 | `students` | Admission, semester records, course results, SGPA/CGPA, promotion and pass-out |
 | `hr` | Staff profiles, competencies, workload allocation and norms, ratings, staffing metrics |
 | `finance` | Fee structures, concessions, invoices, payments, salary structures, payroll |
+| `notifications` | Notification centre, deadlines timetable, automatic completion checks, `notify` command |
 | `biometric` | Devices, punches (CSV/API), presence, correlation with course attendance and teaching |
 | `exams` | Assessment components, question bank, exams, marks; `services.py` (scheme, question generation, paper builder, re-exams / additional assessments), `analytics.py` (totals, CO attainment, question analysis) |
