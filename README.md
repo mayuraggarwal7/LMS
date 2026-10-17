@@ -52,6 +52,8 @@ Options:
 - `REPO_URL=https://<token>@github.com/mayuraggarwal7/LMS.git` is needed if the repository is private.
 - `DEMO=0` loads the FRCRCE data without demo users.
 
+Check a deployment from any computer with `pip install requests && python deploy/smoke_test.py https://<your-host>`. It logs in as each demo role, crawls every page and checks HTTPS and access rules without changing any data.
+
 Re-run the script to update; the database in `/var/lib/campusflow` is kept. Settings live in `/etc/campusflow.env`. Logs: `journalctl -u campusflow`.
 
 ## What the teacher does and what the system does
