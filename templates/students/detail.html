@@ -9,7 +9,6 @@
   {% if is_admin %}<div class="row"><a class="btn" href="{% url 'student_account' sp.pk %}">Fee account</a>
     <form method="post" action="{% url 'promote_student' sp.pk %}" class="inline">{% csrf_token %}<button class="btn primary" data-confirm="Promote based on the current semester's result?">Promote</button></form></div>{% endif %}
 </div>
-{% if is_admin %}{% include "includes/console_nav.html" with ctab="students" %}{% endif %}
 <div class="grid cols-4">
   <div class="card"><div class="stat">{{ cgpa|default_if_none:"–" }}</div><div class="stat-label">CGPA{% if percent_equivalent %} · ≈ {{ percent_equivalent|floatformat:1 }}%{% endif %}</div></div>
   <div class="card"><div class="stat">{{ credits|floatformat:0 }}</div><div class="stat-label">credits earned{% if sp.program.total_credits %} of {{ sp.program.total_credits }}{% endif %}</div></div>

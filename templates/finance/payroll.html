@@ -3,7 +3,6 @@
 {% block content %}
 <h1>Payroll</h1>
 <p class="sub">Monthly payslips for all teaching and lab staff. Days present come from the biometric system; absent days without approved leave become loss-of-pay. Visiting faculty are paid per teaching hour delivered.</p>
-{% include "includes/console_nav.html" with ctab="payroll" %}
 <form method="post" class="card row" style="margin-bottom:1rem">{% csrf_token %}<input type="hidden" name="action" value="run">
   <label style="margin:0">Month</label><input type="month" name="month" value="{{ default_month }}" style="max-width:11rem" required>
   <label style="margin:0">Working days</label><input type="number" name="working_days" value="26" min="1" max="31" style="max-width:6rem">

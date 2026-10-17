@@ -1,5 +1,28 @@
 {% extends "base.html" %}
 {% block title %}{{ course.code }}{% endblock %}
+{% block course_nav %}
+  <div class="nav-group course-group">
+    <div class="nav-title" title="{{ course.title }}">{{ course.code }} · {{ course.title|truncatechars:22 }}</div>
+      <a href="{% url 'course_detail' course.pk %}" class="sub-item {% if tab == 'overview' %}active{% endif %}">Overview</a>
+      <a href="{% url 'stream' course.pk %}" class="sub-item {% if tab == 'stream' %}active{% endif %}">Stream</a>
+      <a href="{% url 'course_syllabus' course.pk %}" class="sub-item {% if tab == 'syllabus' %}active{% endif %}">Syllabus &amp; COs</a>
+      <a href="{% url 'course_plan' course.pk %}" class="sub-item {% if tab == 'plan' %}active{% endif %}">Learning plan</a>
+      {% if request.is_course_teacher %}<a href="{% url 'timetable' course.pk %}" class="sub-item {% if tab == 'timetable' %}active{% endif %}">Timetable</a>{% endif %}
+      <a href="{% url 'session_list' course.pk %}" class="sub-item {% if tab == 'sessions' %}active{% endif %}">Classes &amp; notes</a>
+      <a href="{% url 'attendance_report' course.pk %}" class="sub-item {% if tab == 'attendance' %}active{% endif %}">Attendance</a>
+      <a href="{% url 'classwork' course.pk %}" class="sub-item {% if tab == 'classwork' %}active{% endif %}">Classwork</a>
+      {% if request.is_course_teacher %}<a href="{% url 'rubric_list' course.pk %}" class="sub-item {% if tab == 'rubrics' %}active{% endif %}">Rubrics</a>{% endif %}
+      <a href="{% url 'exam_list' course.pk %}" class="sub-item {% if tab == 'exams' %}active{% endif %}">Exams</a>
+      {% if request.is_course_teacher %}
+        <a href="{% url 'gradebook' course.pk %}" class="sub-item {% if tab == 'grades' %}active{% endif %}">Gradebook</a>
+        <a href="{% url 'co_attainment' course.pk %}" class="sub-item {% if tab == 'attainment' %}active{% endif %}">CO attainment</a>
+      {% else %}
+        <a href="{% url 'my_grades' course.pk %}" class="sub-item {% if tab == 'grades' %}active{% endif %}">My grades</a>
+      {% endif %}
+      <a href="{% url 'course_people' course.pk %}" class="sub-item {% if tab == 'people' %}active{% endif %}">People</a>
+      {% if request.is_course_teacher %}<a href="{% url 'course_settings' course.pk %}" class="sub-item {% if tab == 'settings' %}active{% endif %}">Settings</a>{% endif %}
+  </div>
+{% endblock %}
 {% block course_head %}
 <div class="course-head">
   <div class="inner">
@@ -15,26 +38,6 @@
       </div>
       {% endif %}
     </div>
-    <nav class="tabs">
-      <a href="{% url 'course_detail' course.pk %}" class="{% if tab == 'overview' %}active{% endif %}">Overview</a>
-      <a href="{% url 'stream' course.pk %}" class="{% if tab == 'stream' %}active{% endif %}">Stream</a>
-      <a href="{% url 'course_syllabus' course.pk %}" class="{% if tab == 'syllabus' %}active{% endif %}">Syllabus &amp; COs</a>
-      <a href="{% url 'course_plan' course.pk %}" class="{% if tab == 'plan' %}active{% endif %}">Learning plan</a>
-      {% if request.is_course_teacher %}<a href="{% url 'timetable' course.pk %}" class="{% if tab == 'timetable' %}active{% endif %}">Timetable</a>{% endif %}
-      <a href="{% url 'session_list' course.pk %}" class="{% if tab == 'sessions' %}active{% endif %}">Classes &amp; notes</a>
-      <a href="{% url 'attendance_report' course.pk %}" class="{% if tab == 'attendance' %}active{% endif %}">Attendance</a>
-      <a href="{% url 'classwork' course.pk %}" class="{% if tab == 'classwork' %}active{% endif %}">Classwork</a>
-      {% if request.is_course_teacher %}<a href="{% url 'rubric_list' course.pk %}" class="{% if tab == 'rubrics' %}active{% endif %}">Rubrics</a>{% endif %}
-      <a href="{% url 'exam_list' course.pk %}" class="{% if tab == 'exams' %}active{% endif %}">Exams</a>
-      {% if request.is_course_teacher %}
-        <a href="{% url 'gradebook' course.pk %}" class="{% if tab == 'grades' %}active{% endif %}">Gradebook</a>
-        <a href="{% url 'co_attainment' course.pk %}" class="{% if tab == 'attainment' %}active{% endif %}">CO attainment</a>
-      {% else %}
-        <a href="{% url 'my_grades' course.pk %}" class="{% if tab == 'grades' %}active{% endif %}">My grades</a>
-      {% endif %}
-      <a href="{% url 'course_people' course.pk %}" class="{% if tab == 'people' %}active{% endif %}">People</a>
-      {% if request.is_course_teacher %}<a href="{% url 'course_settings' course.pk %}" class="{% if tab == 'settings' %}active{% endif %}">Settings</a>{% endif %}
-    </nav>
   </div>
 </div>
 {% endblock %}

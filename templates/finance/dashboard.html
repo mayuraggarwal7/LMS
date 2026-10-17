@@ -3,7 +3,6 @@
 {% block content %}
 <div class="page-head"><div><h1>Accounts</h1><p class="sub">Every student's fees and every staff member's payouts.</p></div>
   <form method="get" class="row"><select name="ay" onchange="this.form.submit()">{% for y in years %}<option {% if y == ay %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></form></div>
-{% include "includes/console_nav.html" with ctab="finance" %}
 <div class="grid cols-4">
   <div class="card"><div class="stat">₹{{ ledger.billed|floatformat:0|intcomma }}</div><div class="stat-label">billed for {{ ay }} · {{ ledger.invoices }} invoices</div></div>
   <div class="card"><div class="stat">₹{{ ledger.collected|floatformat:0|intcomma }}</div><div class="stat-label">collected</div></div>

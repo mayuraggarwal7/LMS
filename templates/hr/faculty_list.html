@@ -3,7 +3,6 @@
 {% block content %}
 <div class="page-head"><h1>Faculty &amp; staff <span class="sub">({{ rows|length }})</span></h1>
   <div class="row"><a class="btn" href="{% url 'allocation_board' %}">Workload allocation</a><a class="btn primary" href="{% url 'faculty_new' %}">+ Add staff</a></div></div>
-{% include "includes/console_nav.html" with ctab="hr" %}
 <div class="grid cols-4" style="margin-bottom:1rem">
   <div class="card"><div class="stat">{{ staffing.teaching }}</div><div class="stat-label">teaching · {{ staffing.lab_staff }} lab/technical</div></div>
   <div class="card"><div class="stat">{{ staffing.cadre.professor }}:{{ staffing.cadre.associate }}:{{ staffing.cadre.assistant }}</div><div class="stat-label">Prof : Assoc : Asst (AICTE 1:2:6)</div></div>

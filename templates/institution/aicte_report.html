@@ -2,7 +2,6 @@
 {% block title %}AICTE compliance{% endblock %}
 {% block content %}
 <div class="page-head"><div><h1>AICTE compliance report</h1><p class="sub">{{ inst.name }} · generated {% now "j M Y" %}</p></div><button class="btn no-print" onclick="window.print()">Print</button></div>
-{% include "includes/console_nav.html" with ctab="aicte" %}
 <div class="table-wrap"><table>
   <tr><th>Check</th><th>Norm</th><th>Actual</th><th>Status</th><th>Detail</th></tr>
   {% for c in checks %}<tr><td><strong>{{ c.name }}</strong></td><td>{{ c.norm }}</td><td>{{ c.actual }}</td>

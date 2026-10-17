@@ -3,7 +3,6 @@
 {% block content %}
 <h1>Biometric attendance</h1>
 <p class="sub">Punches from campus devices for students and staff, matched by roll no. / PRN / admission no. (students) or biometric / employee id (staff), and checked against class attendance and classes taught.</p>
-{% include "includes/console_nav.html" with ctab="bio" %}
 <div class="grid cols-4">
   <div class="card"><div class="stat">{{ today_people }}</div><div class="stat-label">people punched in today</div></div>
   <div class="card"><div class="stat">{{ today_punches }}</div><div class="stat-label">punches today</div></div>

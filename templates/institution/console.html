@@ -6,7 +6,6 @@
     <p class="sub">{% if inst.affiliating_university %}Affiliated to {{ inst.affiliating_university }}{% endif %}{% if inst.autonomous_since %} · Autonomous since {{ inst.autonomous_since }}{% endif %}{% if inst.naac_grade %} · NAAC {{ inst.naac_grade }}{% endif %}{% if inst.aicte_id %} · AICTE {{ inst.aicte_id }}{% endif %}</p></div>
   <div class="row"><a class="btn" href="{% url 'institution_edit' %}">Edit details</a><a class="btn" href="/admin/">Data admin</a></div>
 </div>
-{% include "includes/console_nav.html" with ctab="home" %}
 {% if issues %}<div class="card" style="background:var(--bad-soft);margin-bottom:1rem"><strong>{{ issues|length }} rule{{ issues|length|pluralize }} weaker than AICTE norms</strong>
   {% for i in issues %}<div>• {{ i.message }}</div>{% endfor %} <a href="{% url 'rules' %}">Review rules</a></div>{% endif %}
 <div class="grid cols-4">

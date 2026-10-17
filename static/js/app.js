@@ -1,5 +1,12 @@
 // Small progressive enhancements; every page works without JS.
 document.addEventListener("click", (e) => {
+  const toggle = e.target.closest("[data-nav-toggle]");
+  if (toggle) {
+    const open = document.body.classList.toggle("nav-open");
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+  } else if (document.body.classList.contains("nav-open") && !e.target.closest(".sidebar")) {
+    document.body.classList.remove("nav-open");
+  }
   const btn = e.target.closest("[data-mark-all]");
   if (btn) {
     const value = btn.dataset.markAll;
@@ -50,3 +57,11 @@ document.addEventListener("input", (e) => {
   if (e.target.matches("input[data-points]")) updateRubricTotal();
 });
 document.addEventListener("DOMContentLoaded", updateRubricTotal);
+
+// Keep the side menu just below the top bar, whatever height the bar wraps to.
+function syncTopbarHeight() {
+  const bar = document.querySelector(".topbar");
+  if (bar) document.documentElement.style.setProperty("--topbar-h", bar.offsetHeight + "px");
+}
+window.addEventListener("resize", syncTopbarHeight);
+document.addEventListener("DOMContentLoaded", syncTopbarHeight);

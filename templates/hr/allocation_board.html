@@ -3,7 +3,6 @@
 {% block content %}
 <h1>Workload allocation{% if term %} <span class="sub">{{ term }}</span>{% endif %}</h1>
 <p class="sub">Each course with its allocated staff, and the best available faculty ranked by competency match and spare hours against their AICTE workload norm.</p>
-{% include "includes/console_nav.html" with ctab="alloc" %}
 <div class="table-wrap"><table>
   <tr><th>Course</th><th>Allocated</th><th>Suggested teaching faculty</th><th>Lab staff</th></tr>
   {% for r in rows %}<tr>

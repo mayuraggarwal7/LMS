@@ -2,7 +2,6 @@
 {% block title %}Students{% endblock %}
 {% block content %}
 <div class="page-head"><h1>Students <span class="sub">({{ total }})</span></h1><a class="btn primary" href="{% url 'admit_student' %}">+ Admit student</a></div>
-{% include "includes/console_nav.html" with ctab="students" %}
 <form method="get" class="row" style="margin-bottom:.8rem">
   <select name="program"><option value="">All branches</option>{% for p in programs %}<option value="{{ p.pk }}" {% if filters.program == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.code }}</option>{% endfor %}</select>
   <select name="year"><option value="">All years</option>{% for y in "1234" %}<option value="{{ y }}" {% if filters.year == y %}selected{% endif %}>Year {{ y }}</option>{% endfor %}</select>

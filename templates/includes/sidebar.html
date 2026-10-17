@@ -1,0 +1,52 @@
+{% with u=request.resolver_match.url_name %}
+
+  {% if nav_courses %}
+  <div class="nav-group">
+    <div class="nav-title">My courses</div>
+    {% for c in nav_courses %}<a href="{% url 'course_detail' c.pk %}" class="{% if course.pk == c.pk %}current{% endif %}" title="{{ c.title }}"><span class="ico code">{{ c.code|truncatechars:8 }}</span>{{ c.title|truncatechars:24 }}</a>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if user.is_teacher %}
+  <div class="nav-group">
+    <div class="nav-title">Teaching</div>
+    <a href="{% url 'course_new' %}" class="{% if u == 'course_new' %}active{% endif %}"><span class="ico">➕</span>New course</a>
+    <a href="{% url 'pending_attendance' %}" class="{% if u == 'pending_attendance' %}active{% endif %}"><span class="ico">✅</span>Attendance</a>
+    <a href="{% url 'schedule_changes' %}" class="{% if u == 'schedule_changes' %}active{% endif %}"><span class="ico">📅</span>Holidays &amp; schedule</a>
+  </div>
+  {% endif %}
+
+  {% if user.is_staff or user.is_superuser %}
+  <div class="nav-group">
+    <div class="nav-title">Institution</div>
+    <a href="{% url 'admin_console' %}" class="{% if u == 'admin_console' or u == 'institution_edit' %}active{% endif %}"><span class="ico">🏛</span>Overview</a>
+    <a href="{% url 'departments' %}" class="{% if u == 'departments' or u == 'program_new' or u == 'program_detail' or u == 'program_edit' %}active{% endif %}"><span class="ico">🧭</span>Departments &amp; branches</a>
+    <a href="{% url 'rules' %}" class="{% if u == 'rules' %}active{% endif %}"><span class="ico">📜</span>Rules</a>
+    <a href="{% url 'aicte_report' %}" class="{% if u == 'aicte_report' %}active{% endif %}"><span class="ico">✔️</span>AICTE compliance</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-title">Students</div>
+    <a href="{% url 'student_list' %}" class="{% if u == 'student_list' or u == 'student_detail' and not user.student_profile %}active{% endif %}"><span class="ico">🎓</span>All students</a>
+    <a href="{% url 'admit_student' %}" class="{% if u == 'admit_student' %}active{% endif %}"><span class="ico">📝</span>Admission</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-title">Faculty &amp; HR</div>
+    <a href="{% url 'faculty_list' %}" class="{% if u == 'faculty_list' or u == 'faculty_new' or u == 'faculty_edit' or u == 'faculty_detail' and user.is_staff %}active{% endif %}"><span class="ico">👩‍🏫</span>Faculty &amp; staff</a>
+    <a href="{% url 'allocation_board' %}" class="{% if u == 'allocation_board' %}active{% endif %}"><span class="ico">🧩</span>Workload allocation</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-title">Accounts</div>
+    <a href="{% url 'finance_dashboard' %}" class="{% if u == 'finance_dashboard' or u == 'student_account' %}active{% endif %}"><span class="ico">💰</span>Fees</a>
+    <a href="{% url 'payroll' %}" class="{% if u == 'payroll' or u == 'payroll_run' %}active{% endif %}"><span class="ico">🧾</span>Payroll</a>
+  </div>
+  <div class="nav-group">
+    <div class="nav-title">Attendance devices</div>
+    <a href="{% url 'biometric' %}" class="{% if u == 'biometric' %}active{% endif %}"><span class="ico">🖐</span>Biometric</a>
+  </div>
+  {% if user.is_superuser %}<div class="nav-group"><a href="/admin/"><span class="ico">⚙️</span>Database admin</a></div>{% endif %}
+  {% endif %}
+
+  <div class="nav-group">
+    <a href="{% url 'profile' %}" class="{% if u == 'profile' %}active{% endif %}"><span class="ico">👤</span>My profile</a>
+  </div>
+{% endwith %}

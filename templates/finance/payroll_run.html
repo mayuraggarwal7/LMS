@@ -3,7 +3,6 @@
 {% block content %}
 <div class="page-head"><div><h1>{{ run }}</h1><p class="sub">{{ run.working_days }} working days · {{ run.get_status_display }} · gross ₹{{ totals.gross|floatformat:0|intcomma }} · net ₹{{ totals.net|floatformat:0|intcomma }} · {{ totals.lop }} loss-of-pay days</p></div>
   <form method="post" class="row">{% csrf_token %}{% if run.status == 'draft' %}<button name="status" value="approved" class="btn primary">Approve</button>{% elif run.status == 'approved' %}<button name="status" value="paid" class="btn primary">Mark paid</button>{% endif %}</form></div>
-{% include "includes/console_nav.html" with ctab="payroll" %}
 <div class="table-wrap"><table class="compact">
   <tr><th>Staff</th><th>Dept</th><th class="num">Days present</th><th class="num">LOP</th><th class="num">Teaching h</th><th class="num">Gross</th><th class="num">Deductions</th><th class="num">Net</th></tr>
   {% for s in slips %}<tr><td><a href="{% url 'faculty_detail' s.faculty.pk %}">{{ s.faculty.user.display_name }}</a> <span class="sub">{{ s.faculty.get_designation_display }}</span></td><td>{{ s.faculty.department.code|default:"" }}</td>

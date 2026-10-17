@@ -2,7 +2,6 @@
 {% block title %}Admit student{% endblock %}
 {% block content %}
 <h1>Admit a student</h1>
-{% include "includes/console_nav.html" with ctab="students" %}
 <form method="post" class="card" style="max-width:980px">{% csrf_token %}
   {{ form.non_field_errors }}
   <div class="form-grid">{% field form.first_name %}{% field form.last_name %}{% field form.email %}{% field form.program %}

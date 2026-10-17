@@ -3,7 +3,6 @@
 {% block content %}
 <div class="page-head"><div><h1>Fee account — {{ sp.user.display_name }}</h1><p class="sub">{{ sp.admission_no }} · {{ sp.program }} · {{ sp.get_admission_type_display }} · {{ sp.category }}</p></div>
   <a class="btn" href="{% url 'student_detail' sp.pk %}">Academic progress</a></div>
-{% include "includes/console_nav.html" with ctab="finance" %}
 <div class="grid cols-2">
   <div class="card"><h3 style="margin-top:0">Ledger</h3>
     <table class="compact"><tr><th>Date</th><th>Entry</th><th class="num">Charge</th><th class="num">Paid</th><th class="num">Balance</th></tr>

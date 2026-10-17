@@ -5,7 +5,6 @@
   <p class="sub">{{ fp.get_designation_display }} · {{ fp.department|default:"" }} · {{ fp.get_staff_type_display }} · {{ fp.get_employment_display }} · {{ fp.employee_id }}{% if fp.biometric_id %} · biometric id {{ fp.biometric_id }}{% endif %}</p>
   <p class="sub">{{ fp.qualification }}{% if fp.experience_years %} · {{ fp.experience_years }} yrs experience{% endif %}{% if fp.date_of_joining %} · joined {{ fp.date_of_joining|date:"j M Y" }}{% endif %}</p></div>
   {% if is_admin %}<a class="btn" href="{% url 'faculty_edit' fp.pk %}">Edit</a>{% endif %}</div>
-{% if is_admin %}{% include "includes/console_nav.html" with ctab="hr" %}{% endif %}
 <div class="grid cols-4">
   <div class="card"><div class="stat">{{ load.load|floatformat:0 }}<span class="sub">/{{ load.norm|floatformat:0 }}</span></div><div class="stat-label">hrs/week vs norm{% if load.status == 'over' %} · <span class="badge bad">over</span>{% elif load.status == 'under' %} · <span class="badge warn">under-used</span>{% endif %}</div></div>
   <div class="card"><div class="stat">{{ rating.overall|default_if_none:"–" }}</div><div class="stat-label">rating (1–5) from {{ rating.responses }} responses</div></div>

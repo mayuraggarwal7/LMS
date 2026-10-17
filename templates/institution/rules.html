@@ -3,7 +3,6 @@
 {% block content %}
 <h1>Rules framework</h1>
 <p class="sub">AICTE (the nodal body) sets the floor; the affiliating university and the autonomous institute refine it. The most specific rule applies; anything weaker than AICTE is flagged.</p>
-{% include "includes/console_nav.html" with ctab="rules" %}
 {% if issues %}<div class="card" style="background:var(--bad-soft);margin-bottom:1rem">{% for i in issues %}<div>⚠ {{ i.message }}</div>{% endfor %}</div>{% endif %}
 <div class="table-wrap"><table>
   <tr><th>Rule</th>{% for k, label in scopes %}<th>{{ label }}</th>{% endfor %}</tr>

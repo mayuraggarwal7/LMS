@@ -4,7 +4,6 @@
 <div class="page-head"><div><h1>{{ program }}</h1>
   <p class="sub">{{ program.department|default:"" }} · {{ program.duration_years }} years · intake {{ program.intake }}{% if program.year_started %} · since {{ program.year_started }}{% endif %}{% if program.nba_accredited %} · <span class="badge ok">NBA accredited{% if program.nba_valid_till %} to {{ program.nba_valid_till }}{% endif %}</span>{% endif %}</p></div>
   <a class="btn" href="{% url 'program_edit' program.pk %}">Edit</a></div>
-{% include "includes/console_nav.html" with ctab="depts" %}
 <div class="grid cols-2">
   <div class="card"><h2 style="margin-top:0">Rules in force for this branch</h2>
     <p class="sub">Most specific wins: institute over university over AICTE; branch-specific over college-wide.</p>

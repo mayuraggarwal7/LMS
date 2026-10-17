@@ -2,7 +2,6 @@
 {% block title %}Departments{% endblock %}
 {% block content %}
 <h1>Departments &amp; branches</h1>
-{% include "includes/console_nav.html" with ctab="depts" %}
 <div class="table-wrap"><table>
   <tr><th>Department</th><th>HOD</th><th class="num">Teaching</th><th class="num">Lab / technical</th><th class="num">Ph.D.</th><th>Programmes</th></tr>
   {% for r in rows %}<tr><td><strong>{{ r.dept.code }}</strong> {{ r.dept.name }}{% if r.dept.is_first_year %} <span class="badge">first year</span>{% endif %}</td>
