@@ -1,0 +1,26 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<form method="post" class="card" style="max-width:980px">{% csrf_token %}
+  {% if is_assignment %}<input type="hidden" name="assignment" value="{{ original.pk }}">{% else %}<input type="hidden" name="exam" value="{{ original.pk }}">{% endif %}
+  <h2>Re-exam / additional assessment</h2>
+  <p class="sub">For <strong>{{ original.title }}</strong>{% if original.component %} ({{ original.component }}){% endif %}. A fresh paper is generated from the question bank
+    (avoiding questions already used). Once marks are entered, the result is folded into the gradebook and CIE report for the selected students only.</p>
+  {{ form.non_field_errors }}
+  <div class="grid cols-2">
+    <div>
+      <div class="field radio-row"><label>Type</label>{{ form.purpose }}</div>
+      <div class="field"><label>How it counts</label>{{ form.policy }}
+        <span class="help">Re-exams usually <em>replace</em> the original; make-up / improvement tests usually count as the <em>better of</em> the two.</span></div>
+      {% field form.title %}
+      <div class="form-grid">{% field form.date %}{% field form.duration_minutes %}{% field form.total_marks %}{% field form.term %}</div>
+    </div>
+    <div>
+      <label>Students ({{ suggested|length }} suggested: absent, not assessed or below the pass mark)</label>
+      <div class="checks" style="max-height:24rem;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:.5rem">{{ form.candidates }}</div>
+      {{ form.candidates.errors }}
+    </div>
+  </div>
+  <button class="btn primary big" style="margin-top:.8rem">Create &amp; generate paper</button>
+  <a class="btn ghost" href="{% if is_assignment %}{% url 'assignment_detail' course.pk original.pk %}{% else %}{% url 'exam_detail' course.pk original.pk %}{% endif %}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Good day, {{ user.first_name|default:user.username }} 👋</h1>
+    <p class="sub">{% now "l, j F Y" %} · {{ todays|length }} class{{ todays|length|pluralize:"es" }} today{% if pending_notes %} · <a href="{% url 'pending_attendance' %}">{{ pending_notes }} pending attendance</a>{% endif %}</p>
+  </div>
+  <a class="btn primary big" href="{% url 'course_new' %}">+ New course from syllabus</a>
+</div>
+
+{% if not cards %}
+<div class="card hero">
+  <h1>Set up your first course in 2 minutes</h1>
+  <p class="sub">Upload your syllabus (PDF, Word or text). CampusFlow extracts units, topics and course outcomes, then builds a
+    session-by-session learning plan, an ISE/MSE/ESE assessment scheme, rubrics, a question bank, draft assignments and exam papers.</p>
+  <a class="btn primary big" href="{% url 'course_new' %}">Upload a syllabus</a>
+</div>
+{% else %}
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Today</h2>
+    {% for s in todays %}
+      <div class="row between" style="padding:.4rem 0;border-bottom:1px solid var(--border)">
+        <div><strong>{{ s.start_time|time:"H:i" }}</strong> · {{ s.course.code }} · {{ s.get_session_type_display }}{% if s.room %} · {{ s.room }}{% endif %}<br>
+          <span class="sub">{{ s.plan_item.title|default:"Buffer / revision" }}</span></div>
+        <a class="btn small {% if s.status == 'scheduled' %}primary{% endif %}" href="{% url 'session_detail' s.course_id s.pk %}">{% if s.status == 'scheduled' %}Take class{% else %}{{ s.get_status_display }}{% endif %}</a>
+      </div>
+    {% empty %}<p class="sub">No classes scheduled today.</p>{% endfor %}
+    {% if upcoming %}<h3>Coming up</h3>
+      {% for s in upcoming %}<div class="sub">{{ s.date|date:"D j M" }} {{ s.start_time|time:"H:i" }} · {{ s.course.code }} · {{ s.plan_item.title|default:"Buffer"|truncatechars:60 }}</div>{% endfor %}
+    {% endif %}
+  </div>
+  <div class="card" id="pending">
+    <h2>Needs your attention</h2>
+    <ul class="checklist">
+      {% for c in cards %}
+        {% if c.to_grade %}<li>📝 <a href="{% url 'classwork' c.course.pk %}">{{ c.to_grade }} submission{{ c.to_grade|pluralize }} to grade in {{ c.course.code }}</a></li>{% endif %}
+        {% if c.progress.behind %}<li>⏱ <a href="{% url 'session_list' c.course.pk %}?show=pending">{{ c.course.code }} is {{ c.progress.behind }} session{{ c.progress.behind|pluralize }} behind plan</a></li>{% endif %}
+        {% if c.at_risk %}<li>⚠️ <a href="{% url 'attendance_report' c.course.pk %}">{{ c.at_risk }} student{{ c.at_risk|pluralize }} below attendance threshold in {{ c.course.code }}</a></li>{% endif %}
+      {% endfor %}
+      {% if pending_notes %}<li>🗒 <a href="{% url 'pending_attendance' %}">{{ pending_notes }} class{{ pending_notes|pluralize:"es" }} with pending attendance</a></li>{% endif %}
+    </ul>
+  </div>
+</div>
+
+<h2>Your courses</h2>
+<div class="grid cols-3">
+  {% for c in cards %}
+  <a class="card course-card" href="{% url 'course_detail' c.course.pk %}">
+    <div class="code">{{ c.course.code }} · Y{{ c.course.year }} S{{ c.course.semester }}{% if c.course.division %} · {{ c.course.division }}{% endif %}</div>
+    <h3 style="margin:.2rem 0 .6rem">{{ c.course.title }}</h3>
+    <div class="meter"><div class="progress"><span style="width:{{ c.progress.percent }}%"></span></div><span class="sub">{{ c.progress.percent }}%</span></div>
+    <div class="sub">{{ c.progress.delivered }}/{{ c.progress.total }} planned sessions delivered · {{ c.students }} students</div>
+  </a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

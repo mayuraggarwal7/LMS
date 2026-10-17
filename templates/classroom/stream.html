@@ -1,0 +1,24 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div style="max-width:820px">
+  {% if request.is_course_teacher %}
+  <form method="post" class="card">{% csrf_token %}
+    <textarea name="text" rows="3" placeholder="Announce something to your class…"></textarea>
+    <div class="right" style="margin-top:.4rem"><button class="btn primary">Post</button></div>
+  </form>
+  {% endif %}
+  {% for f in feed %}
+  <div class="card feed-item" style="margin-top:.8rem">
+    {% if f.kind == 'announcement' %}
+      <div class="feed-icon">📣</div><div><strong>{{ f.obj.author.display_name }}</strong> <span class="sub">{{ f.when|date:"j M, H:i" }}</span><p>{{ f.obj.text|linebreaksbr|urlize }}</p></div>
+    {% elif f.kind == 'assignment' %}
+      <div class="feed-icon">📝</div><div>New {{ f.obj.get_kind_display|lower }}: <a href="{% url 'assignment_detail' course.pk f.obj.pk %}"><strong>{{ f.obj.title }}</strong></a>
+        <div class="sub">{{ f.when|date:"j M" }}{% if f.obj.due_at %} · due {{ f.obj.due_at|date:"D j M, H:i" }}{% endif %}</div></div>
+    {% else %}
+      <div class="feed-icon">🗒</div><div>Class notes: <a href="{% url 'session_detail' course.pk f.obj.pk %}"><strong>{{ f.obj.plan_item.title|default:"Class"|truncatechars:80 }}</strong></a>
+        <div class="sub">Class on {{ f.obj.date|date:"D j M" }}</div></div>
+    {% endif %}
+  </div>
+  {% empty %}<div class="card empty" style="margin-top:.8rem">Nothing here yet.</div>{% endfor %}
+</div>
+{% endblock %}

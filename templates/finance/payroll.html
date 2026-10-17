@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}Payroll{% endblock %}
+{% block content %}
+<h1>Payroll</h1>
+<p class="sub">Monthly payslips for all teaching and lab staff. Days present come from the biometric system; absent days without approved leave become loss-of-pay. Visiting faculty are paid per teaching hour delivered.</p>
+<form method="post" class="card row" style="margin-bottom:1rem">{% csrf_token %}<input type="hidden" name="action" value="run">
+  <label style="margin:0">Month</label><input type="month" name="month" value="{{ default_month }}" style="max-width:11rem" required>
+  <label style="margin:0">Working days</label><input type="number" name="working_days" value="26" min="1" max="31" style="max-width:6rem">
+  <button class="btn primary">Compute payroll</button></form>
+<div class="table-wrap"><table><tr><th>Month</th><th>Status</th><th class="num">Staff</th><th class="num">Net payout</th></tr>
+  {% for r in runs %}<tr><td><a href="{% url 'payroll_run' r.pk %}">{{ r.month|date:"F Y" }}</a></td><td>{{ r.get_status_display }}</td><td class="num">{{ r.payslips.all|length }}</td><td class="num">₹{{ r.total_net|floatformat:0|intcomma }}</td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">No payroll yet.</td></tr>{% endfor %}</table></div>
+{% endblock %}

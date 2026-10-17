@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Switch term{% endblock %}
+{% block content %}
+<div class="card" style="max-width:980px;margin:0 auto">
+  <h1 class="center">Switch term</h1>
+  <div class="chips" style="justify-content:center">
+    <a href="?" class="{% if not kind %}active{% endif %}">All</a>
+    {% for k, label in kinds %}<a href="?kind={{ k }}" class="{% if kind == k %}active{% endif %}"><span class="term-badge term-{{ k }}">{% if k == 'odd' %}O{% elif k == 'even' %}E{% elif k == 'reexam' %}R{% else %}SP{% endif %}</span>{{ label }}</a>{% endfor %}
+  </div>
+  <div class="term-list">
+    {% for t in terms %}
+    <form method="post" class="term-row {% if selected and selected.pk == t.pk %}selected{% endif %}">{% csrf_token %}
+      <input type="hidden" name="term" value="{{ t.pk }}"><input type="hidden" name="next" value="{{ request.GET.next }}">
+      <span class="term-badge term-{{ t.kind }}">{{ t.badge }}</span>
+      <div style="flex:1"><strong>{{ t }}</strong><div class="sub">{{ t.name }}{% if t.start_date %} · {{ t.start_date|date:"j M Y" }} – {{ t.end_date|date:"j M Y" }}{% endif %} · {{ t.courses.count }} course{{ t.courses.count|pluralize }}</div></div>
+      {% if t.is_active %}<span class="badge ok">institution's active term</span>{% endif %}
+      {% if selected and selected.pk == t.pk %}<span class="badge info">✓ viewing</span>{% else %}<button class="btn small">Switch</button>{% endif %}
+    </form>
+    {% empty %}<p class="empty">No terms set up yet.{% if user.is_staff %} Create one below.{% else %} Ask the administrator to add academic terms.{% endif %}</p>{% endfor %}
+  </div>
+  <p class="sub" style="margin-top:1rem">Courses belong to a term; dashboards, attendance and reports show the term you're viewing. New courses are created in the viewed term.</p>
+  {% if form %}
+  <details style="margin-top:1rem"><summary>Add a term (administrators)</summary>
+    <form method="post" style="margin-top:.6rem">{% csrf_token %}<div class="form-grid">{% include "includes/form_fields.html" %}</div>
+      <button name="create" value="1" class="btn primary">Create term</button></form>
+  </details>
+  {% endif %}
+</div>
+{% endblock %}

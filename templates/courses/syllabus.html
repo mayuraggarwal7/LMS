@@ -1,0 +1,43 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="grid cols-2">
+  <div class="stack">
+    <div class="card">
+      <h2>Course outcomes (COs)</h2>
+      {% if formset %}
+      <form method="post">{% csrf_token %}{{ formset.management_form }}
+        <div class="table-wrap"><table class="compact">
+          <tr><th>Code</th><th>Outcome</th><th>Bloom</th><th>Target %</th><th>Del</th></tr>
+          {% for f in formset %}<tr>{{ f.id }}
+            <td style="width:5rem">{{ f.code }}</td><td>{{ f.description }}{{ f.description.errors }}</td>
+            <td style="width:9rem">{{ f.bloom_level }}</td><td style="width:5rem">{{ f.target_percent }}</td><td>{{ f.DELETE }}</td></tr>{% endfor %}
+        </table></div>
+        <p class="sub">Target % = score a student needs on CO-mapped questions/criteria to count as attaining it.</p>
+        <button name="save_outcomes" value="1" class="btn primary">Save outcomes</button>
+      </form>
+      {% else %}
+        {% for o in course.outcomes.all %}<p><span class="badge info">{{ o.code }}</span> {{ o.description }}</p>{% endfor %}
+      {% endif %}
+    </div>
+    <div class="card">
+      <h2>Books &amp; resources</h2>
+      {% for r in references %}<p><span class="badge">{{ r.get_kind_display }}</span> {{ r.text }}</p>{% empty %}<p class="sub">None listed.</p>{% endfor %}
+      {% if experiments %}<h3>Lab experiments</h3><ol>{% for e in experiments %}<li>{{ e.title }}</li>{% endfor %}</ol>{% endif %}
+    </div>
+    {% if course.syllabus_file %}<div class="card"><h2>Original syllabus</h2><a class="btn" href="{{ course.syllabus_file.url }}">Download</a></div>{% endif %}
+  </div>
+  <div class="card">
+    <h2>Units &amp; topics</h2>
+    {% if request.is_course_teacher %}
+    <form method="post">{% csrf_token %}
+      <textarea name="units_text" rows="26" class="mono">{{ units_text }}</textarea>
+      <p class="sub">Format: <code>Unit 1: Title | hours</code> then <code>- topic</code> lines.</p>
+      <label><input type="checkbox" name="regenerate" value="1"> Regenerate learning plan &amp; re-sync timetable (delivered sessions are kept)</label>
+      <button name="save_units" value="1" class="btn primary" style="margin-top:.5rem">Save units</button>
+    </form>
+    {% else %}
+      {% for u in units %}<h3>Unit {{ u.number }}: {{ u.title }} <span class="sub">({{ u.hours }}h)</span></h3><ul>{% for t in u.topics.all %}<li>{{ t.title }}</li>{% endfor %}</ul>{% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

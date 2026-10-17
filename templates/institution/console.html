@@ -1,0 +1,32 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}Admin console{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>{{ inst.name }}</h1>
+    <p class="sub">{% if inst.affiliating_university %}Affiliated to {{ inst.affiliating_university }}{% endif %}{% if inst.autonomous_since %} · Autonomous since {{ inst.autonomous_since }}{% endif %}{% if inst.naac_grade %} · NAAC {{ inst.naac_grade }}{% endif %}{% if inst.aicte_id %} · AICTE {{ inst.aicte_id }}{% endif %}</p></div>
+  <div class="row"><a class="btn" href="{% url 'institution_edit' %}">Edit details</a><a class="btn" href="/admin/">Data admin</a></div>
+</div>
+{% if issues %}<div class="card" style="background:var(--bad-soft);margin-bottom:1rem"><strong>{{ issues|length }} rule{{ issues|length|pluralize }} weaker than AICTE norms</strong>
+  {% for i in issues %}<div>• {{ i.message }}</div>{% endfor %} <a href="{% url 'rules' %}">Review rules</a></div>{% endif %}
+<div class="grid cols-4">
+  <div class="card"><div class="stat">{{ staffing.students }}</div><div class="stat-label">students studying · sanctioned strength {{ staffing.sanctioned_strength }}</div></div>
+  <div class="card"><div class="stat">{{ staffing.teaching }}</div><div class="stat-label">teaching faculty · {{ staffing.lab_staff }} lab/technical staff</div></div>
+  <div class="card"><div class="stat">{% if staffing.ratio %}1:{{ staffing.ratio }}{% else %}–{% endif %}</div><div class="stat-label">faculty : student (on sanctioned strength) · {{ staffing.phd_percent|pct:0 }} Ph.D.</div></div>
+  <div class="card"><div class="stat">₹{{ ledger.collected|floatformat:0|intcomma }}</div><div class="stat-label">fees collected · ₹{{ ledger.outstanding|floatformat:0|intcomma }} outstanding</div></div>
+</div>
+<h2>Branches / programmes</h2>
+<div class="table-wrap"><table>
+  <tr><th>Programme</th><th>Department</th><th class="num">Intake</th><th class="num">Studying</th><th class="num">Passed out</th><th>NBA</th><th></th></tr>
+  {% for r in programs %}<tr class="{% if not r.program.active %}muted{% endif %}">
+    <td><strong>{{ r.program.code }}</strong> {{ r.program }} <span class="badge">{{ r.program.get_level_display|truncatechars:14 }}</span>{% if not r.program.active %} <span class="badge">inactive</span>{% endif %}</td>
+    <td>{{ r.program.department|default:"–" }}</td><td class="num">{{ r.program.intake }}</td><td class="num">{{ r.active }}</td><td class="num">{{ r.passed }}</td>
+    <td>{% if r.program.nba_accredited %}<span class="badge ok">Accredited{% if r.program.nba_valid_till %} to {{ r.program.nba_valid_till }}{% endif %}</span>{% else %}<span class="badge">No</span>{% endif %}</td>
+    <td><a class="btn small" href="{% url 'program_detail' r.program.pk %}">Open</a></td></tr>{% endfor %}
+</table></div>
+<div class="row" style="margin-top:.6rem"><a class="btn small" href="{% url 'program_new' %}">+ Add programme</a></div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card"><h2 style="margin-top:0">Departments</h2>
+    <table class="compact">{% for d in departments %}<tr><td>{{ d.name }}</td><td class="sub">HOD: {{ d.hod.display_name|default:"–" }}</td></tr>{% endfor %}</table></div>
+  <div class="card"><h2 style="margin-top:0">Data source</h2><p class="sub" style="white-space:pre-wrap">{{ inst.data_source_note|default:"Entered by administrators."|truncatechars:900 }}</p></div>
+</div>
+{% endblock %}

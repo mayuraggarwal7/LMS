@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="page-head"><h1>Students <span class="sub">({{ total }})</span></h1><a class="btn primary" href="{% url 'admit_student' %}">+ Admit student</a></div>
+<form method="get" class="row" style="margin-bottom:.8rem">
+  <select name="program"><option value="">All branches</option>{% for p in programs %}<option value="{{ p.pk }}" {% if filters.program == p.pk|stringformat:"s" %}selected{% endif %}>{{ p.code }}</option>{% endfor %}</select>
+  <select name="year"><option value="">All years</option>{% for y in "1234" %}<option value="{{ y }}" {% if filters.year == y %}selected{% endif %}>Year {{ y }}</option>{% endfor %}</select>
+  <select name="status"><option value="">Any status</option>{% for k, v in statuses %}<option value="{{ k }}" {% if filters.status == k %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+  <input type="text" name="q" value="{{ filters.q|default:'' }}" placeholder="name, admission no, roll, PRN" style="max-width:16rem"><button class="btn small">Filter</button>
+</form>
+<form method="post" action="{% url 'bulk_promote' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+<div class="table-wrap"><table>
+  <tr><th></th><th>Admission no.</th><th>Name</th><th>Branch</th><th>Admitted</th><th>Type · category</th><th class="num">Sem</th><th class="num">CGPA</th><th>Status</th></tr>
+  {% for sp in page %}<tr><td><input type="checkbox" name="selected" value="{{ sp.pk }}"></td>
+    <td class="mono">{{ sp.admission_no }}</td><td><a href="{% url 'student_detail' sp.pk %}">{{ sp.user.display_name }}</a><div class="sub">{{ sp.user.roll_no }} {{ sp.user.prn }}</div></td>
+    <td>{{ sp.program.code }}</td><td>{{ sp.admission_year }}</td><td class="sub">{{ sp.get_admission_type_display|truncatechars:24 }} · {{ sp.category }}</td>
+    <td class="num">{{ sp.current_semester }}</td><td class="num">{{ sp.cgpa|default_if_none:"–" }}</td>
+    <td><span class="badge {% if sp.status == 'active' %}ok{% elif sp.status == 'passed' %}info{% else %}warn{% endif %}">{{ sp.get_status_display }}</span></td></tr>
+  {% empty %}<tr><td colspan="9" class="empty">No students.</td></tr>{% endfor %}
+</table></div>
+<div class="row" style="margin-top:.6rem"><button class="btn" data-confirm="Promote the selected students based on their current semester result?">Promote selected</button>
+  {% if page.has_previous %}<a class="btn small ghost" href="?{% for k, v in filters.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page.previous_page_number }}">← Prev</a>{% endif %}
+  <span class="sub">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}<a class="btn small ghost" href="?{% for k, v in filters.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page.next_page_number }}">Next →</a>{% endif %}</div>
+</form>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Attendance</h1><p class="sub">{% if current_term %}{{ current_term }} · {% endif %}classes held so far, per class</p></div>
+  <a class="btn" href="{% url 'schedule_changes' %}">🗓 Holiday / supplementary day</a></div>
+<div class="table-wrap">
+<table>
+  <tr><th>Class</th><th class="num">Marked</th><th class="num">Pending</th><th></th></tr>
+  {% for r in summary %}<tr class="{% if course_filter == r.course.pk|stringformat:'s' %}highlight{% endif %}">
+    <td><strong>{{ r.course.code }}</strong> {{ r.course.title }}<div class="sub">{{ r.course.department|default:"" }} · Sem{{ r.course.semester|stringformat:"02d" }}{% if r.course.division %} · Div {{ r.course.division }}{% endif %}</div></td>
+    <td class="num" style="color:var(--ok);font-weight:700">{{ r.marked }}</td><td class="num" style="color:var(--bad);font-weight:700">{{ r.pending }}</td>
+    <td class="right"><a class="btn small" href="?course={{ r.course.pk }}">Show pending</a> <a class="btn small ghost" href="{% url 'attendance_report' r.course.pk %}">Report</a></td></tr>
+  {% empty %}<tr><td colspan="4" class="empty">No courses in this term.</td></tr>{% endfor %}
+  <tr><td><strong>TOTAL</strong></td><td class="num" style="color:var(--ok);font-weight:700;font-size:1.2rem">{{ total_marked }}</td><td class="num" style="color:var(--bad);font-weight:700;font-size:1.2rem">{{ total_pending }}</td><td>{% if course_filter %}<a class="btn small ghost" href="?">Show all</a>{% endif %}</td></tr>
+</table></div>
+
+<form method="post">{% csrf_token %}
+<div class="row between" style="margin:1.4rem 0 .6rem"><h2 style="margin:0">List of pending attendance</h2>
+  {% if pending %}<button class="btn danger" data-confirm="Delete the selected classes? Use this for classes that did not take place; the learning plan shifts to the next slots.">Delete classes in bulk</button>{% endif %}</div>
+<div class="table-wrap"><table>
+  {% for s in pending %}<tr>
+    <td style="width:2rem"><input type="checkbox" name="selected" value="{{ s.pk }}"></td>
+    <td><span class="date-chip"><div class="t">{{ s.start_time|time:"h:i A" }}</div><div class="d">{{ s.date|date:"jS M Y" }}</div></span></td>
+    <td>Sem{{ s.course.semester|stringformat:"02d" }}{% if s.course.division %} - Div {{ s.course.division }}{% endif %}</td>
+    <td>{{ s.course.department }}</td>
+    <td>{{ s.course.title }} ({{ s.get_session_type_display }})<div class="sub">{{ s.plan_item.title|default:"Buffer / revision"|truncatechars:70 }}</div></td>
+    <td>{{ s.course.code }}</td>
+    <td class="right" style="white-space:nowrap"><a class="btn primary" href="{% url 'session_detail' s.course_id s.pk %}">Take attendance</a>
+      <button class="btn danger small" name="session" value="{{ s.pk }}" formnovalidate onclick="this.form.querySelectorAll('[name=selected]').forEach(c=>c.checked=false)" data-confirm="Delete this class (it did not take place)?">Delete</button></td>
+  </tr>{% empty %}<tr><td class="empty">🎉 No pending attendance.</td></tr>{% endfor %}
+</table></div>
+</form>
+{% endblock %}

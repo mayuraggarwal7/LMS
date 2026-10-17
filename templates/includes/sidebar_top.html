@@ -1,0 +1,8 @@
+{% with u=request.resolver_match.url_name %}
+  <div class="nav-group">
+    <a href="{% url 'dashboard' %}" class="{% if u == 'dashboard' %}active{% endif %}"><span class="ico">🏠</span>Dashboard</a>
+    <a href="{% url 'notification_center' %}" class="{% if u == 'notification_center' %}active{% endif %}"><span class="ico">🔔</span>Notifications{% if notif_unread %}<span class="nav-count">{{ notif_unread }}</span>{% endif %}</a>
+    {% if user.student_profile %}<a href="{% url 'my_progress' %}" class="{% if u == 'student_detail' and not user.is_staff %}active{% endif %}"><span class="ico">📈</span>My progress</a>{% endif %}
+    {% if user.faculty_profile %}<a href="{% url 'my_hr' %}" class="{% if u == 'faculty_detail' and not user.is_staff %}active{% endif %}"><span class="ico">🪪</span>My HR</a>{% endif %}
+  </div>
+{% endwith %}

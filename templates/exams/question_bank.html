@@ -1,0 +1,28 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Question bank <span class="sub">({{ questions|length }})</span></h2>
+    <p class="sub">Generated from the syllabus topics across Bloom's levels and tagged to COs{% if ai_enabled %} (AI-assisted){% endif %}. Edit, delete or add your own.</p></div>
+  <form method="post" class="row">{% csrf_token %}<input type="hidden" name="action" value="generate">
+    <select name="units" multiple size="1" style="min-width:10rem">{% for u in units %}<option value="{{ u.pk }}">Unit {{ u.number }}</option>{% endfor %}</select>
+    <button class="btn">+ Generate more</button></form>
+</div>
+<form method="get" class="row" style="margin-bottom:.8rem">
+  <select name="unit"><option value="">All units</option>{% for u in units %}<option value="{{ u.number }}" {% if filters.unit == u.number|stringformat:"s" %}selected{% endif %}>Unit {{ u.number }}</option>{% endfor %}</select>
+  <select name="bloom_level"><option value="">All Bloom levels</option>{% for i in "123456" %}<option value="{{ i }}" {% if filters.bloom_level == i %}selected{% endif %}>L{{ i }}</option>{% endfor %}</select>
+  <select name="marks"><option value="">Any marks</option><option value="2" {% if filters.marks == '2' %}selected{% endif %}>2</option><option value="5" {% if filters.marks == '5' %}selected{% endif %}>5</option><option value="10" {% if filters.marks == '10' %}selected{% endif %}>10</option></select>
+  <button class="btn small">Filter</button>
+</form>
+<div class="grid" style="grid-template-columns: 2fr 1fr">
+  <form method="post">{% csrf_token %}<input type="hidden" name="action" value="delete">
+    <div class="table-wrap"><table class="compact">
+      <tr><th></th><th>Question</th><th>Unit</th><th>CO</th><th>Bloom</th><th>Marks</th><th>Source</th></tr>
+      {% for q in questions %}<tr><td><input type="checkbox" name="selected" value="{{ q.pk }}"></td>
+        <td><a href="{% url 'question_edit' course.pk q.pk %}">{{ q.text }}</a></td><td>{{ q.unit.number }}</td><td>{{ q.outcome.code }}</td><td>L{{ q.bloom_level }}</td><td class="num">{{ q.marks|num }}</td><td><span class="badge">{{ q.get_source_display }}</span></td></tr>
+      {% empty %}<tr><td colspan="7" class="empty">No questions yet.</td></tr>{% endfor %}
+    </table></div>
+    {% if questions %}<button class="btn small danger" style="margin-top:.5rem" data-confirm="Delete selected questions?">Delete selected</button>{% endif %}
+  </form>
+  <form method="post" class="card">{% csrf_token %}<h3>Add a question</h3>{% include "includes/form_fields.html" %}<button class="btn primary">Add</button></form>
+</div>
+{% endblock %}

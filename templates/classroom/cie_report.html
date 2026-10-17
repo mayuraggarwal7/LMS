@@ -1,0 +1,33 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Consolidated CIE and attendance report</h2>
+    <p class="sub">Continuous internal evaluation: every item's marks (<span class="ne">NE</span> = not entered, AB = absent), bucket marks per component, total CIE out of {{ cie_max|num }} and attendance.</p></div>
+  <div class="row">
+    <form method="get" class="row"><strong>Sort by:</strong>
+      <label style="margin:0;font-weight:400"><input type="radio" name="sort" value="roll" {% if sort == 'roll' %}checked{% endif %} onchange="this.form.submit()"> Roll no</label>
+      <label style="margin:0;font-weight:400"><input type="radio" name="sort" value="name" {% if sort == 'name' %}checked{% endif %} onchange="this.form.submit()"> Name</label>
+      <label style="margin:0;font-weight:400"><input type="radio" name="sort" value="prn" {% if sort == 'prn' %}checked{% endif %} onchange="this.form.submit()"> PRN</label>
+      <label style="margin:0;font-weight:400"><input type="checkbox" name="ese" value="1" {% if include_ese %}checked{% endif %} onchange="this.form.submit()"> include ESE</label>
+    </form>
+    <a class="btn" href="{% url 'gradebook' course.pk %}">Gradebook</a>
+    <a class="btn primary" href="?sort={{ sort }}{% if include_ese %}&ese=1{% endif %}&format=csv">Export CSV</a>
+  </div>
+</div>
+<div class="table-wrap"><table class="cie compact">
+  <tr><th rowspan="2">SL</th><th rowspan="2">Student name</th><th rowspan="2">Roll no.</th><th rowspan="2">PRN no.</th>
+    {% for col in columns %}<th class="comp center" colspan="{{ col.items|length|add:1 }}">{{ col.component.name }} · bucket {{ col.component.max_marks|num }} · {{ col.component.weight|num }}%</th>{% endfor %}
+    <th rowspan="2" class="bucket">Total CIE<br>/{{ cie_max|num }}</th><th rowspan="2">Attendance</th></tr>
+  <tr>{% for col in columns %}{% for item in col.items %}<th class="item" title="{{ item.obj }}">{{ item.obj.title|truncatechars:18 }}<br>/{{ item.max|num }}</th>{% endfor %}<th class="bucket">{{ col.component.name }}<br>/{{ col.component.max_marks|num }}</th>{% endfor %}</tr>
+  {% for r in rows %}<tr>
+    <td>{{ r.sl }}</td><td style="white-space:nowrap"><a href="{% url 'my_grades' course.pk %}?student={{ r.student.pk }}">{{ r.student.display_name }}</a></td>
+    <td>{{ r.student.roll_no }}</td><td class="mono">{{ r.student.prn }}</td>
+    {% for comp in r.components %}
+      {% for c in comp.cells %}<td class="num">{% if not c %}<span class="ne">NE</span>{% elif c.score is None %}AB{% else %}{{ c.score|num:2 }}{% endif %}{% if c.retake %}<sup class="badge warn" title="original: {{ c.original|default_if_none:'AB' }}">{{ c.retake }}</sup>{% endif %}</td>{% endfor %}
+      <td class="num bucket">{% if comp.marks is None %}<span class="ne">NE</span>{% else %}{{ comp.marks|num:2 }}{% endif %}</td>
+    {% endfor %}
+    <td class="num bucket">{% if r.cie_total is None %}<span class="ne">NE</span>{% else %}{{ r.cie_total|num:2 }}{% endif %}</td>
+    <td class="num"><span class="badge {{ r.attendance.percent|att_class }}">{{ r.attendance.percent|pct:1 }}</span><div class="sub">{{ r.attendance.present }}/{{ r.attendance.total }}</div></td>
+  </tr>{% empty %}<tr><td colspan="6" class="empty">No students enrolled.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

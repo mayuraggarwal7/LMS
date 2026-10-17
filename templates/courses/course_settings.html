@@ -1,0 +1,31 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="grid cols-2">
+  <div class="card">
+    <h2>Course settings</h2>
+    <form method="post">{% csrf_token %}
+      <div class="form-grid">{% include "includes/form_fields.html" %}</div>
+      <button class="btn primary">Save</button>
+    </form>
+  </div>
+  <div class="stack">
+    <div class="card">
+      <h2>Class code</h2>
+      <p><span class="code-box">{{ course.join_code }}</span></p>
+      <form method="post">{% csrf_token %}<button name="reset_code" value="1" class="btn small">Generate new code</button></form>
+    </div>
+    <div class="card">
+      <h2>Calendar</h2>
+      <p class="sub">Subscribe in Google Calendar / Outlook by importing the .ics file.</p>
+      <a class="btn" href="{% url 'calendar_ics' course.pk %}">Download .ics</a>
+    </div>
+    <div class="card">
+      <h2>Danger zone</h2>
+      <form method="post" action="{% url 'course_delete' course.pk %}" class="row">{% csrf_token %}
+        <input type="text" name="confirm" placeholder="type {{ course.code }} to confirm" style="max-width:16rem">
+        <button class="btn danger">Delete course</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Hi {{ user.first_name|default:user.username }} 👋</h1><p class="sub">{% now "l, j F Y" %}</p></div>
+  <form method="post" action="{% url 'join_course' %}" class="row card flat" style="padding:.5rem .7rem">{% csrf_token %}
+    <label for="code" style="margin:0">Join a class</label>
+    <input id="code" name="code" type="text" placeholder="class code" style="width:9rem" required>
+    <button class="btn primary">Join</button>
+  </form>
+</div>
+<div class="grid cols-2">
+  <div class="card">
+    <h2>To do</h2>
+    {% for a in todo %}
+      <div class="row between" style="padding:.35rem 0;border-bottom:1px solid var(--border)">
+        <div><a href="{% url 'assignment_detail' a.course_id a.pk %}">{{ a.title }}</a><br><span class="sub">{{ a.course.code }}{% if a.due_at %} · due {{ a.due_at|date:"D j M, H:i" }}{% endif %}</span></div>
+        {% if a.is_overdue %}<span class="badge bad">Missing</span>{% else %}<span class="badge info">Assigned</span>{% endif %}
+      </div>
+    {% empty %}<p class="sub">All caught up 🎉</p>{% endfor %}
+  </div>
+  <div class="card">
+    <h2>Today's classes</h2>
+    {% for s in todays %}
+      <div style="padding:.3rem 0"><strong>{{ s.start_time|time:"H:i" }}</strong> {{ s.course.code }} · {{ s.plan_item.title|default:"Class" }}{% if s.room %} · {{ s.room }}{% endif %}</div>
+    {% empty %}<p class="sub">No classes today.</p>{% endfor %}
+    {% if returned %}<h3>Recently graded</h3>
+      {% for sub in returned %}<div class="sub"><a href="{% url 'assignment_detail' sub.assignment.course_id sub.assignment_id %}">{{ sub.assignment.title }}</a> — {{ sub.score|num }}/{{ sub.assignment.max_points|num }}</div>{% endfor %}
+    {% endif %}
+  </div>
+</div>
+<h2>My classes</h2>
+<div class="grid cols-3">
+  {% for c in cards %}
+  <a class="card course-card" href="{% url 'course_detail' c.course.pk %}">
+    <div class="code">{{ c.course.code }}</div>
+    <h3 style="margin:.2rem 0 .5rem">{{ c.course.title }}</h3>
+    <div class="sub">{{ c.course.teacher.display_name }}</div>
+    <div class="row" style="margin-top:.5rem">
+      <span class="badge {{ c.attendance.percent|att_class }}">Attendance {{ c.attendance.percent|pct }}</span>
+      <span class="badge">Syllabus {{ c.progress.percent }}% covered</span>
+    </div>
+  </a>
+  {% empty %}
+  <div class="card empty">You haven't joined any class yet. Ask your teacher for the class code.</div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="card" style="max-width:760px">
+  <h2>Import your existing lesson plan</h2>
+  <p class="sub">Upload the lesson plan you already submit to the department (Word .doc/.docx, PDF or text). CampusFlow reads the
+    <em>Sr. No. / Proposed Date / Topics / Delivery Mode / CO / Actual Date / Remark</em> table and rebuilds the learning plan in that order:
+    one session per lecture (<code>19/7 (2)</code> = two lectures that day), COs as written, sub-sections like <code>2.1</code> mapped to units,
+    holidays added to the timetable. The timetable is re-synced afterwards; delivered sessions keep their notes and attendance.</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}{% include "includes/form_fields.html" %}
+    <button class="btn primary" data-confirm="Replace the current learning plan with the imported one?">Import &amp; replace plan</button>
+    <a class="btn ghost" href="{% url 'course_plan' course.pk %}">Cancel</a></form>
+</div>
+{% endblock %}

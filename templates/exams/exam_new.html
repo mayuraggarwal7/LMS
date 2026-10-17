@@ -1,0 +1,13 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<form method="post" class="card" style="max-width:900px">{% csrf_token %}
+  <h2>New exam paper</h2>
+  {{ form.non_field_errors }}
+  <div class="form-grid">{% field form.title %}{% field form.component %}{% field form.date %}{% field form.duration_minutes %}{% field form.total_marks %}</div>
+  <div class="checks">{% field form.units %}</div>
+  <h3>Blueprint</h3>
+  <p class="sub">Share of total marks for each question band. The generator balances units, avoids repeating questions from earlier papers and reports Bloom &amp; CO coverage.</p>
+  <div class="form-grid">{% field form.short_pct %}{% field form.medium_pct %}{% field form.long_pct %}</div>
+  <button class="btn primary big">Generate paper</button>
+</form>
+{% endblock %}

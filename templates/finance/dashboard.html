@@ -1,0 +1,31 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}Accounts{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Accounts</h1><p class="sub">Every student's fees and every staff member's payouts.</p></div>
+  <form method="get" class="row"><select name="ay" onchange="this.form.submit()">{% for y in years %}<option {% if y == ay %}selected{% endif %}>{{ y }}</option>{% endfor %}</select></form></div>
+<div class="grid cols-4">
+  <div class="card"><div class="stat">₹{{ ledger.billed|floatformat:0|intcomma }}</div><div class="stat-label">billed for {{ ay }} · {{ ledger.invoices }} invoices</div></div>
+  <div class="card"><div class="stat">₹{{ ledger.collected|floatformat:0|intcomma }}</div><div class="stat-label">collected</div></div>
+  <div class="card"><div class="stat">₹{{ ledger.outstanding|floatformat:0|intcomma }}</div><div class="stat-label">outstanding · {{ ledger.defaulters }} student{{ ledger.defaulters|pluralize }} with dues</div></div>
+  <div class="card"><div class="stat">₹{{ ledger.concessions|floatformat:0|intcomma }}</div><div class="stat-label">concessions (TFWS, scholarships)</div></div>
+</div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card"><h3 style="margin-top:0">By branch</h3>
+    <table class="compact"><tr><th>Branch</th><th class="num">Students</th><th class="num">Billed</th><th class="num">Collected</th><th class="num">With dues</th></tr>
+    {% for p, r in by_program.items %}<tr><td>{{ p.code }}</td><td class="num">{{ r.count }}</td><td class="num">₹{{ r.billed|floatformat:0|intcomma }}</td><td class="num">₹{{ r.collected|floatformat:0|intcomma }}</td><td class="num">{{ r.defaulters }}</td></tr>
+    {% empty %}<tr><td class="sub">No invoices for {{ ay }}.</td></tr>{% endfor %}</table>
+    <form method="post" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="raise"><button class="btn small primary">Raise / refresh {{ ay }} invoices for all students</button></form>
+  </div>
+  <div class="card"><h3 style="margin-top:0">Fee structures {{ ay }}</h3>
+    <table class="compact">{% for f in structures %}<tr><td>{{ f.program.code }} · Y{{ f.year_of_study }}{% if f.category %} · {{ f.category }}{% endif %}</td><td class="sub">{{ f.approved_by|truncatechars:30 }}</td><td class="num"><strong>₹{{ f.total|floatformat:0|intcomma }}</strong></td></tr>
+    {% empty %}<tr><td class="sub">No fee structure for {{ ay }} — add one in <a href="/admin/finance/feestructure/">data admin</a>.</td></tr>{% endfor %}</table></div>
+</div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card"><h3 style="margin-top:0">Largest dues</h3>
+    <table class="compact">{% for i in defaulters %}<tr><td><a href="{% url 'student_account' i.student.pk %}">{{ i.student.user.display_name }}</a> <span class="sub">{{ i.student.program.code }}</span></td><td class="num">₹{{ i.balance|floatformat:0|intcomma }}</td></tr>{% empty %}<tr><td class="sub">No dues.</td></tr>{% endfor %}</table></div>
+  <div class="card"><h3 style="margin-top:0">Recent payments</h3>
+    <table class="compact">{% for p in recent %}<tr><td>{{ p.paid_on|date:"j M" }}</td><td>{{ p.invoice.student.user.display_name }}</td><td class="sub">{{ p.receipt_no }} · {{ p.get_mode_display }}</td><td class="num">₹{{ p.amount|floatformat:0|intcomma }}</td></tr>{% empty %}<tr><td class="sub">None yet.</td></tr>{% endfor %}</table>
+    <h3>Payroll</h3>
+    <table class="compact">{% for r in payroll %}<tr><td><a href="{% url 'payroll_run' r.pk %}">{{ r.month|date:"F Y" }}</a></td><td>{{ r.get_status_display }}</td><td class="num">₹{{ r.total_net|floatformat:0|intcomma }}</td></tr>{% empty %}<tr><td class="sub"><a href="{% url 'payroll' %}">Run payroll</a></td></tr>{% endfor %}</table></div>
+</div>
+{% endblock %}

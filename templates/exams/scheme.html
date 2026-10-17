@@ -1,0 +1,29 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Assessment scheme</h2>
+    <p class="sub">The holistic evaluation framework for this course: continuous in-semester evaluation (ISE), mid-semester exam (MSE), term work and the end-semester exam (ESE).
+      Assignments and exams are attached to a component; the gradebook rolls them up using these weights.</p></div>
+  <a class="btn" href="{% url 'exam_list' course.pk %}">← Exams</a>
+</div>
+{% if not components %}<form method="post" class="card">{% csrf_token %}<p>No scheme yet.</p><button name="use_default" value="1" class="btn primary">Create the default ISE / MSE / ESE scheme</button></form>{% endif %}
+<form method="post">{% csrf_token %}{{ formset.management_form }}{{ formset.non_form_errors }}
+<div class="table-wrap"><table class="compact">
+  <tr><th>Name</th><th>Type</th><th>Weight %</th><th>Out of</th><th>Aggregation</th><th>Best N</th><th>Min pass %</th><th>Order</th><th>Delete</th></tr>
+  {% for f in formset %}<tr>{{ f.id }}
+    <td>{{ f.name }}{{ f.name.errors }}</td><td>{{ f.kind }}</td><td>{{ f.weight }}</td><td>{{ f.max_marks }}</td><td>{{ f.aggregation }}</td>
+    <td style="width:5rem">{{ f.best_of }}</td><td style="width:6rem">{{ f.min_pass_percent }}</td><td style="width:5rem">{{ f.order }}</td><td>{{ f.DELETE }}</td></tr>{% endfor %}
+</table></div>
+<div class="row" style="margin-top:.6rem"><button class="btn primary">Save scheme</button><span class="sub">Current total weight: <strong>{{ total_weight|num }}%</strong></span></div>
+</form>
+<h2>What feeds each component</h2>
+<div class="grid cols-3">
+  {% for c in components %}<div class="card"><h3>{{ c.name }} <span class="badge">{{ c.weight|num }}%</span></h3>
+    <p class="sub">{{ c.get_kind_display }} · {{ c.get_aggregation_display }}{% if c.aggregation == 'best' %} ({{ c.best_of }}){% endif %}</p>
+    {% for a in c.assignments.all %}<div>📝 <a href="{% url 'assignment_detail' course.pk a.pk %}">{{ a.title }}</a>{% if a.status == 'draft' %} <span class="badge">draft</span>{% endif %}</div>{% endfor %}
+    {% for e in c.exams.all %}<div>🧾 <a href="{% url 'exam_detail' course.pk e.pk %}">{{ e.title }}</a></div>{% endfor %}
+    {% if not c.assignments.all and not c.exams.all %}<p class="sub">Nothing attached yet.</p>{% endif %}
+    <a class="btn small" href="{% url 'exam_new' course.pk %}?component={{ c.pk }}">+ Exam / test</a>
+  </div>{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<div class="page-head">
+  <div><h2 style="margin:0">Rubric library</h2>
+    <p class="sub">Analytic rubrics with criteria mapped to course outcomes. Assignments get their own copy, so edits here never change past grades.</p></div>
+  <form method="post" action="{% url 'rubric_create' course.pk %}" class="row">{% csrf_token %}
+    <select name="kind">{% for key, t in templates.items %}<option value="{{ key }}">{{ t.title }}</option>{% endfor %}<option value="blank">Blank rubric</option></select>
+    <button class="btn primary">+ New rubric</button>
+  </form>
+</div>
+<div class="grid cols-2">
+{% for r in rubrics %}
+  <div class="card">
+    <div class="row between"><h3 style="margin:0"><a href="{% url 'rubric_edit' course.pk r.pk %}">{{ r.title }}</a></h3>
+      <span>{% if r.is_template %}<span class="badge info">Template</span>{% else %}<span class="badge">Used by {{ r.assignments.all|length }} assignment{{ r.assignments.all|length|pluralize }}</span>{% endif %} <span class="badge">{{ r.total_points|num }} pts</span></span></div>
+    <table class="compact" style="margin-top:.5rem">
+      {% for c in r.criteria.all %}<tr><td>{{ c.title }}</td><td class="num">{{ c.max_points|num }}</td><td>{% if c.outcome %}<span class="badge info">{{ c.outcome.code }}</span>{% endif %}</td></tr>{% endfor %}
+    </table>
+  </div>
+{% empty %}<div class="card empty">No rubrics yet.</div>{% endfor %}
+</div>
+{% endblock %}

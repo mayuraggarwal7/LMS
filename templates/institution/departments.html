@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Departments{% endblock %}
+{% block content %}
+<h1>Departments &amp; branches</h1>
+<div class="table-wrap"><table>
+  <tr><th>Department</th><th>HOD</th><th class="num">Teaching</th><th class="num">Lab / technical</th><th class="num">Ph.D.</th><th>Programmes</th></tr>
+  {% for r in rows %}<tr><td><strong>{{ r.dept.code }}</strong> {{ r.dept.name }}{% if r.dept.is_first_year %} <span class="badge">first year</span>{% endif %}</td>
+    <td>{% if r.dept.hod and r.dept.hod.faculty_profile %}<a href="{% url 'faculty_detail' r.dept.hod.faculty_profile.pk %}">{{ r.dept.hod.display_name }}</a>{% else %}–{% endif %}</td>
+    <td class="num"><a href="{% url 'faculty_list' %}?dept={{ r.dept.pk }}">{{ r.teaching }}</a></td><td class="num">{{ r.lab }}</td><td class="num">{{ r.phd }}</td>
+    <td>{% for p in r.programs %}<a class="badge info" href="{% url 'program_detail' p.pk %}">{{ p.code }}</a> {% empty %}<span class="sub">–</span>{% endfor %}</td></tr>{% endfor %}
+</table></div>
+<form method="post" class="card row" style="margin-top:1rem">{% csrf_token %}<strong>Add department</strong>
+  <input type="text" name="name" placeholder="Name" style="max-width:20rem"><input type="text" name="code" placeholder="Code" style="max-width:8rem"><button class="btn">Add</button>
+  <a class="btn ghost" href="{% url 'program_new' %}">+ Add programme / branch</a></form>
+{% endblock %}

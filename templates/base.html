@@ -1,0 +1,48 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CampusFlow{% endblock %} · CampusFlow LMS</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'js/app.js' %}" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="inner">
+    <a class="brand" href="{% url 'dashboard' %}">🎓 Campus<span>Flow</span></a>
+    {% if user.is_authenticated %}
+    <button class="nav-toggle" type="button" aria-label="Menu" aria-controls="sidebar" aria-expanded="false" data-nav-toggle>☰</button>
+    <nav>
+      <a class="term-chip" href="{% url 'term_switch' %}?next={{ request.path|urlencode }}" title="Switch term">
+        {% if current_term %}<span class="term-badge term-{{ current_term.kind }}">{{ current_term.badge }}</span><span class="term-name">{{ current_term.name }}</span>{% else %}<span class="term-name">All terms</span>{% endif %} ▾</a>
+      <a class="bell" href="{% url 'notification_center' %}" title="Notifications" aria-label="Notifications{% if notif_unread %}: {{ notif_unread }} new{% endif %}">🔔{% if notif_unread %}<span class="count">{{ notif_unread }}</span>{% endif %}</a>
+      <a href="{% url 'profile' %}">{{ user.display_name }}</a>
+      <span class="badge">{{ user.get_role_display }}</span>
+      <form class="inline" method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn small ghost">Log out</button></form>
+    </nav>
+    {% endif %}
+  </div>
+</header>
+{% if user.is_authenticated %}
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <nav class="sidenav" aria-label="Modules">
+      {% include "includes/sidebar_top.html" %}
+      {% block course_nav %}{% endblock %}
+      {% include "includes/sidebar.html" %}
+    </nav>
+  </aside>
+  <div class="main-col">
+{% endif %}
+{% block course_head %}{% endblock %}
+<main class="container">
+  {% if messages %}<ul class="messages">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% if user.is_authenticated %}
+  </div>
+</div>
+{% endif %}
+</body>
+</html>

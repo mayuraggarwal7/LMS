@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="card" style="max-width:640px">
+  <h1>Your profile</h1>
+  <p class="sub">Username: {{ user.username }} · {{ user.get_role_display }}</p>
+  <form method="post">{% csrf_token %}
+    <div class="form-grid">{% include "includes/form_fields.html" %}</div>
+    <button class="btn primary">Save</button>
+  </form>
+</div>
+{% endblock %}

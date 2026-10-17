@@ -1,0 +1,20 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Rules{% endblock %}
+{% block content %}
+<h1>Rules framework</h1>
+<p class="sub">AICTE (the nodal body) sets the floor; the affiliating university and the autonomous institute refine it. The most specific rule applies; anything weaker than AICTE is flagged.</p>
+{% if issues %}<div class="card" style="background:var(--bad-soft);margin-bottom:1rem">{% for i in issues %}<div>⚠ {{ i.message }}</div>{% endfor %}</div>{% endif %}
+<div class="table-wrap"><table>
+  <tr><th>Rule</th>{% for k, label in scopes %}<th>{{ label }}</th>{% endfor %}</tr>
+  {% for m in matrix %}<tr><td><strong>{{ m.label }}</strong>{% if m.unit %} <span class="sub">({{ m.unit }})</span>{% endif %}</td>
+    {% for k, label in scopes %}<td>{% for r in m.cells|get:k %}<div title="{{ r.note }}">{{ r.display_value }}{% if r.program %} <span class="badge">{{ r.program.code }}</span>{% endif %}
+      <form method="post" class="inline">{% csrf_token %}<button name="delete_rule" value="{{ r.pk }}" class="btn small ghost" data-confirm="Delete this rule?" title="Delete">✕</button></form></div>{% empty %}<span class="sub">–</span>{% endfor %}</td>{% endfor %}</tr>{% endfor %}
+</table></div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <form method="post" class="card">{% csrf_token %}<h3 style="margin-top:0">Add a rule</h3>{% with form=rule_form %}<div class="form-grid">{% include "includes/form_fields.html" %}</div>{% endwith %}
+    <button name="add_rule" value="1" class="btn primary">Add rule</button></form>
+  <form method="post" class="card">{% csrf_token %}<h3 style="margin-top:0">Add a regulation (rule set)</h3>{% with form=reg_form %}<div class="form-grid">{% include "includes/form_fields.html" %}</div>{% endwith %}
+    <button name="add_regulation" value="1" class="btn">Add regulation</button>
+    <h3>Rule sets</h3>{% for r in regulations %}<div class="sub">{{ r }}{% if r.effective_from %} · from {{ r.effective_from }}{% endif %}{% if not r.active %} · inactive{% endif %}</div>{% endfor %}</form>
+</div>
+{% endblock %}

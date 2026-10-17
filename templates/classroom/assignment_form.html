@@ -1,0 +1,24 @@
+{% extends "course_base.html" %}{% load lms %}
+{% block content %}
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+<div class="grid cols-2">
+  <div class="card">
+    <h2>{% if assignment %}Edit{% else %}New{% endif %} classwork</h2>
+    {{ form.non_field_errors }}
+    {% field form.title %}{% field form.instructions %}
+    <div class="form-grid">{% field form.attachment %}{% field form.reference_link %}</div>
+  </div>
+  <div class="card">
+    <div class="form-grid">{% field form.kind %}{% field form.unit %}{% field form.max_points %}{% field form.due_at %}</div>
+    {% field form.component %}
+    {% field form.rubric_template %}
+    <p class="sub">Choosing a rubric copies it for this assignment and maps its criteria to the selected COs. Rubric scores roll up to the points total, and totals you enter directly are distributed back onto the rubric.</p>
+    <div class="checks">{% field form.outcomes %}</div>
+    <div class="row">
+      <button name="publish" value="1" class="btn primary">{% if assignment.is_published %}Save{% else %}Publish to students{% endif %}</button>
+      {% if not assignment.is_published %}<button class="btn">Save draft</button>{% endif %}
+    </div>
+  </div>
+</div>
+</form>
+{% endblock %}

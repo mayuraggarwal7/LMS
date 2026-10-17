@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}{{ fp.user.display_name }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ fp.user.display_name }}</h1>
+  <p class="sub">{{ fp.get_designation_display }} · {{ fp.department|default:"" }} · {{ fp.get_staff_type_display }} · {{ fp.get_employment_display }} · {{ fp.employee_id }}{% if fp.biometric_id %} · biometric id {{ fp.biometric_id }}{% endif %}</p>
+  <p class="sub">{{ fp.qualification }}{% if fp.experience_years %} · {{ fp.experience_years }} yrs experience{% endif %}{% if fp.date_of_joining %} · joined {{ fp.date_of_joining|date:"j M Y" }}{% endif %}</p></div>
+  {% if is_admin %}<a class="btn" href="{% url 'faculty_edit' fp.pk %}">Edit</a>{% endif %}</div>
+<div class="grid cols-4">
+  <div class="card"><div class="stat">{{ load.load|floatformat:0 }}<span class="sub">/{{ load.norm|floatformat:0 }}</span></div><div class="stat-label">hrs/week vs norm{% if load.status == 'over' %} · <span class="badge bad">over</span>{% elif load.status == 'under' %} · <span class="badge warn">under-used</span>{% endif %}</div></div>
+  <div class="card"><div class="stat">{{ rating.overall|default_if_none:"–" }}</div><div class="stat-label">rating (1–5) from {{ rating.responses }} responses</div></div>
+  <div class="card"><div class="stat">{{ attendance.days_present }}</div><div class="stat-label">days on campus this month · {{ attendance.hours }} h</div></div>
+  <div class="card"><div class="stat">{{ attendance.classes_taught }}</div><div class="stat-label">classes taught this month{% if attendance.classes_without_punch %} · <span class="badge bad">{{ attendance.classes_without_punch|length }} without a punch</span>{% endif %}</div></div>
+</div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card"><h3 style="margin-top:0">Workload allocation</h3>
+    <table class="compact"><tr><th>Course / duty</th><th>Role</th><th class="num">h/week</th><th></th></tr>
+    {% for a in allocations %}<tr><td>{% if a.course %}<a href="{% url 'course_detail' a.course.pk %}">{{ a.course.code }} {{ a.course.title|truncatechars:30 }}</a>{% else %}{{ a.description }}{% endif %}{% if a.division %} · Div {{ a.division }}{% endif %}</td>
+      <td>{{ a.get_role_display }}</td><td class="num">{{ a.hours_per_week|floatformat:0 }}</td>
+      <td>{% if is_admin %}<form method="post" class="inline">{% csrf_token %}<input type="hidden" name="id" value="{{ a.pk }}"><button name="action" value="remove_allocation" class="btn small ghost">✕</button></form>{% endif %}</td></tr>
+    {% empty %}<tr><td class="sub">Nothing allocated.</td></tr>{% endfor %}</table>
+    {% if is_admin %}<form method="post" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="allocate">
+      {% with form=alloc_form %}<div class="form-grid">{% include "includes/form_fields.html" %}</div>{% endwith %}<button class="btn small primary">Allocate</button></form>{% endif %}
+  </div>
+  <div class="card"><h3 style="margin-top:0">Core competencies</h3>
+    <table class="compact">{% for c in competencies %}<tr><td>{{ c.competency.name }} <span class="sub">{{ c.competency.get_area_display }}</span></td>
+      <td style="width:40%"><div class="progress ok"><span style="width:{% widthratio c.level 5 100 %}%"></span></div></td><td class="sub">L{{ c.level }}</td></tr>
+    {% empty %}<tr><td class="sub">None recorded.</td></tr>{% endfor %}</table>
+    {% if is_admin %}<form method="post" class="row" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="competency">
+      <input type="text" name="name" placeholder="e.g. Machine learning" style="max-width:13rem" required>
+      <select name="area" style="max-width:9rem">{% for k, v in areas %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select>
+      <select name="level" style="max-width:5rem">{% for i in "12345" %}<option {% if i == '3' %}selected{% endif %}>{{ i }}</option>{% endfor %}</select>
+      <input type="text" name="evidence" placeholder="evidence" style="max-width:10rem"><button class="btn small">Save</button></form>{% endif %}
+    <h3>Specialisation</h3><p>{{ fp.specialization|default:"–" }}</p>
+  </div>
+</div>
+<div class="grid cols-2" style="margin-top:1rem">
+  <div class="card"><h3 style="margin-top:0">Ratings</h3>
+    <p>{% for k, v in rating.by_source.items %}<span class="badge info">{{ k }}: {{ v|floatformat:2 }}</span> {% endfor %}</p>
+    <table class="compact">{% for r in ratings %}<tr><td>{{ r.created_at|date:"j M Y" }}</td><td>{{ r.get_source_display }} · {{ r.get_criterion_display }}{% if r.course %} · {{ r.course.code }}{% endif %}</td><td class="num"><strong>{{ r.score }}</strong></td><td class="sub">{{ r.responses }} resp.</td></tr>{% empty %}<tr><td class="sub">No ratings yet.</td></tr>{% endfor %}</table>
+    {% if is_admin %}<form method="post" style="margin-top:.6rem">{% csrf_token %}<input type="hidden" name="action" value="rate">{% with form=rating_form %}<div class="form-grid">{% include "includes/form_fields.html" %}</div>{% endwith %}<button class="btn small">Add rating</button></form>{% endif %}
+  </div>
+  <div class="card"><h3 style="margin-top:0">Payslips</h3>
+    <table class="compact">{% for s in payslips %}<tr><td>{{ s.run.month|date:"M Y" }}</td><td class="num">{{ s.days_present }} days</td><td class="num">{% if s.lop_days %}<span class="badge warn">{{ s.lop_days }} LOP</span>{% endif %}</td><td class="num"><strong>₹{{ s.net|floatformat:0|intcomma }}</strong></td></tr>{% empty %}<tr><td class="sub">No payroll yet.</td></tr>{% endfor %}</table>
+    {% if attendance.classes_without_punch %}<h3>Classes marked delivered without a biometric punch</h3>
+      {% for s in attendance.classes_without_punch|slice:":8" %}<div class="sub">{{ s.date|date:"D j M" }} {{ s.start_time|time:"H:i" }} · {{ s.course.code }}</div>{% endfor %}{% endif %}
+  </div>
+</div>
+{% endblock %}

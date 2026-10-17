@@ -1,0 +1,14 @@
+{% extends "base.html" %}{% load lms humanize %}
+{% block title %}{{ run }}{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>{{ run }}</h1><p class="sub">{{ run.working_days }} working days · {{ run.get_status_display }} · gross ₹{{ totals.gross|floatformat:0|intcomma }} · net ₹{{ totals.net|floatformat:0|intcomma }} · {{ totals.lop }} loss-of-pay days</p></div>
+  <form method="post" class="row">{% csrf_token %}{% if run.status == 'draft' %}<button name="status" value="approved" class="btn primary">Approve</button>{% elif run.status == 'approved' %}<button name="status" value="paid" class="btn primary">Mark paid</button>{% endif %}</form></div>
+<div class="table-wrap"><table class="compact">
+  <tr><th>Staff</th><th>Dept</th><th class="num">Days present</th><th class="num">LOP</th><th class="num">Teaching h</th><th class="num">Gross</th><th class="num">Deductions</th><th class="num">Net</th></tr>
+  {% for s in slips %}<tr><td><a href="{% url 'faculty_detail' s.faculty.pk %}">{{ s.faculty.user.display_name }}</a> <span class="sub">{{ s.faculty.get_designation_display }}</span></td><td>{{ s.faculty.department.code|default:"" }}</td>
+    <td class="num">{{ s.days_present }}</td><td class="num">{% if s.lop_days %}<span class="badge warn">{{ s.lop_days }}</span>{% else %}0{% endif %}</td><td class="num">{% if s.teaching_hours %}{{ s.teaching_hours|floatformat:0 }}{% endif %}</td>
+    <td class="num">₹{{ s.gross|floatformat:0|intcomma }}</td><td class="num">₹{{ s.deductions|floatformat:0|intcomma }}</td><td class="num"><strong>₹{{ s.net|floatformat:0|intcomma }}</strong></td></tr>
+  {% empty %}<tr><td colspan="8" class="empty">No staff with salary structures.</td></tr>{% endfor %}
+</table></div>
+<p class="sub">Salary structures are maintained per staff member in <a href="/admin/finance/salarystructure/">data admin</a>.</p>
+{% endblock %}

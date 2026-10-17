@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load lms %}
+{% block title %}Admit student{% endblock %}
+{% block content %}
+<h1>Admit a student</h1>
+<form method="post" class="card" style="max-width:980px">{% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="form-grid">{% field form.first_name %}{% field form.last_name %}{% field form.email %}{% field form.program %}
+    {% field form.admission_no %}{% field form.roll_no %}{% field form.prn %}{% field form.admission_year %}
+    {% field form.admission_type %}{% field form.category %}{% field form.division %}{% field form.qualifying_exam %}{% field form.qualifying_score %}</div>
+  <p class="sub">Lateral-entry (Direct Second Year) students start in semester 3. Lateral entry and TFWS seats are supernumerary under AICTE (up to 10% and 5% of intake).</p>
+  <button class="btn primary">Admit</button>
+</form>
+{% endblock %}

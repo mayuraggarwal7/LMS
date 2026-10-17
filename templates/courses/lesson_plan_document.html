@@ -1,0 +1,28 @@
+{% load lms %}<!doctype html>
+<html><head><meta charset="utf-8"><title>Lesson Plan – {{ course.code }}</title>
+<style>
+ body{font-family:"Times New Roman",serif;max-width:1000px;margin:1.5rem auto;padding:0 1rem;color:#000;line-height:1.35;font-size:14px}
+ h1,h2{text-align:center;margin:.15rem 0} h1{font-size:1.3rem} h2{font-size:1.05rem;font-weight:normal}
+ table{width:100%;border-collapse:collapse;margin:.5rem 0 1rem} td,th{border:1px solid #000;padding:.3rem .4rem;vertical-align:top} th{background:#eee}
+ .event td{font-weight:bold;text-align:center;background:#f6f6f6} .muted{color:#555} .noprint{margin-bottom:1rem;font-family:sans-serif}
+ @media print{.noprint{display:none}}
+</style></head>
+<body>
+<div class="noprint"><button onclick="window.print()">Print</button> <a href="?format=docx">Download .docx</a> · <a href="{% url 'course_plan' course.pk %}">Back to learning plan</a></div>
+{% if course.department %}<h1>{{ course.department }}</h1>{% endif %}
+{% if course.academic_year %}<h2>(Academic Year: {{ course.academic_year }})</h2>{% endif %}
+<p><strong>Course Code:</strong> {{ course.code }}<br><strong>Course Name:</strong> {{ course.title }}<br><strong>Course Teacher:</strong> {{ course.teacher.display_name }}{% if course.division %}<br><strong>Class:</strong> Year {{ course.year }} · Sem {{ course.semester }} · Div {{ course.division }}{% endif %}</p>
+<p><strong>Course Outcomes (CO):</strong> At the end of the course students will be able to</p>
+<table>{% for o in outcomes %}<tr><td style="width:4rem">{{ o.code }}</td><td>{{ o.description }}</td></tr>{% endfor %}</table>
+<h1 style="font-size:1.1rem">Course Lesson Plan</h1>
+<table>
+  <tr><th>Sr. No.</th><th>Proposed Date</th><th>Topics</th><th>Delivery Mode</th><th>CO</th><th>Actual Date</th><th>Remark</th></tr>
+  {% for r in rows %}
+    {% if r.kind == 'event' %}<tr class="event"><td></td><td>{{ r.date|date:"d/m/Y" }}</td><td colspan="5">{{ r.topics }}</td></tr>
+    {% else %}<tr><td>{{ r.sr }}</td><td style="white-space:nowrap">{{ r.proposed|date:"d/m/Y" }}</td><td>{% if r.unit %}<span class="muted">U{{ r.unit }}:</span> {% endif %}{{ r.topics }}</td>
+      <td>{{ r.mode }}</td><td>{{ r.cos }}</td><td style="white-space:nowrap">{{ r.actual|date:"d/m/Y" }}</td><td>{{ r.remark }}</td></tr>{% endif %}
+  {% endfor %}
+</table>
+{% if references %}<p><strong>Text Books / References:</strong></p><ol>{% for r in references %}<li>{{ r.text }}</li>{% endfor %}</ol>{% endif %}
+<p style="margin-top:2.5rem"><strong>Course Instructor:</strong> {{ course.teacher.display_name }}</p>
+</body></html>
