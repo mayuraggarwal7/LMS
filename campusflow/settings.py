@@ -105,6 +105,12 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
+if not DEBUG:
+    # Fingerprinted file names (app.3f9c1e.css) so browsers fetch new CSS/JS after every update.
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    }
 MEDIA_ROOT = Path(os.environ.get("LMS_MEDIA_ROOT", BASE_DIR / "media"))
 # Serve uploaded files from Django itself (fine for a single test/demo instance; use object storage in production)
 LMS_SERVE_MEDIA = DEBUG or os.environ.get("LMS_SERVE_MEDIA") == "1"
